@@ -1,0 +1,6 @@
+{
+  "installed": [
+    {"type": "file", "file": "usr/share/cmake_install_files/data-static.txt"},
+    {"type": "file", "file": "usr/share/cmake_install_files/data-dynamic.txt"}
+  ]
+}
