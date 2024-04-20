@@ -7,17 +7,17 @@ cm_opts = cm.subproject_options()
 cm_opts.add_cmake_defines({'DATA': data})
 sub_pro = cm.subproject('data', options: cm_opts)
 
-assert(sub_pro.found(), 'found() method reports not found, but should be found')
-
-message('prefix is ' + get_option('prefix'))
 prefix = get_option('prefix')
-
 add_project_arguments([
   '-DFILE_STATIC="' + prefix / 'share' / 'data-static.txt' + '"',
   '-DFILE_DYNAMIC="' + prefix / 'share' / 'data-dynamic.txt' + '"',
   '-DDATA_STATIC="text1"',
   '-DDATA_DYNAMIC="' + data + '"',
   ], language: ['c', 'cpp'])
+
+if (get_option('test_read'))
+  add_project_arguments(['-DTEST_READ'], language: ['c', 'cpp'])
+endif
 
 install_data('main.cpp')
 

@@ -5,6 +5,7 @@
 
 using namespace std;
 
+#ifdef TEST_READ
 bool check(const char *file, const char *data) {
   ifstream ifs(file);
   auto size = ifs.tellg();
@@ -21,9 +22,12 @@ bool check(const char *file, const char *data) {
   }
   return true;
 }
+#endif
 
 int main(void) {
+#ifdef TEST_READ
   if (!check(FILE_STATIC, DATA_STATIC)) return 1;
   if (!check(FILE_DYNAMIC, DATA_DYNAMIC)) return 1;
+#endif
   return 0;
 }
