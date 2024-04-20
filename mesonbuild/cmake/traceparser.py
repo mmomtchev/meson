@@ -664,17 +664,17 @@ class CMakeTraceParser:
         install_list = []
         pack_type = None
         dest = None
-        if args[0].upper().strip() in ['TARGETS', 'IMPORTED_RUNTIME_ARTIFACTS']:
+        if args[0].upper().strip() in set(['TARGETS', 'IMPORTED_RUNTIME_ARTIFACTS']):
             # These are already handled via the targets system
             return
-        if args[0].upper().strip() in ['FILES', 'PROGRAMS', 'DIRECTORY']:
+        if args[0].upper().strip() in set(['FILES', 'PROGRAMS', 'DIRECTORY']):
             i = 1
             pack_type = args[0].upper()
             while i < len(args):
-                if args[i].upper() in ['TYPE', 'DESTINATION', 'PERMISSIONS', 'CONFIGURATIONS',
-                                       'COMPONENT', 'RENAME', 'OPTIONAL', 'EXCLUDE_FROM_ALL']:
+                if args[i].upper() in set(['TYPE', 'DESTINATION', 'PERMISSIONS', 'CONFIGURATIONS',
+                                           'COMPONENT', 'RENAME', 'OPTIONAL', 'EXCLUDE_FROM_ALL']):
                     break
-                install_list += [ args[i] ]
+                install_list += [args[i]]
                 i += 1
 
             while i < len(args):
@@ -688,7 +688,7 @@ class CMakeTraceParser:
         if not dest:
             mlog.warning(f'install({args[0]}...) without DESTINATION is not supported by meson')
             return
-        self.install_packs += [ CMakeInstallPack(pack_type, install_list, dest) ]
+        self.install_packs += [CMakeInstallPack(pack_type, install_list, dest)]
 
     def _parse_common_target_options(self, func: str, private_prop: str, interface_prop: str, tline: CMakeTraceLine, ignore: T.Optional[T.List[str]] = None, paths: bool = False) -> None:
         if ignore is None:
