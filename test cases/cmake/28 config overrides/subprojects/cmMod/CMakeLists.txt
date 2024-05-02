@@ -21,3 +21,4 @@ target_link_libraries(cmModLib++ INTERFACE cmMod::cmModLib++)
 # the meson cmake interpreter uses the fileAPI to process the targets
 add_executable(test2 test2.cpp)
 target_link_libraries(test2 cmModLib2)
+add_dependencies(test2 cmModLib_internal)
