@@ -14,8 +14,8 @@ exe1 = executable('main1', ['main.cpp'], dependencies: [sub_config],
   link_depends: [tgt_internal, tgt_test2])
 
 # use the library through a config file w/ INTERFACE_LINK_LIBRARIES
-sub_config = sub_pro.dependency('cmModLib2', include_type: 'system')
-exe2 = executable('main2', ['main.cpp'], dependencies: [sub_config],
+sub2_config = sub_pro.dependency('cmModLib2', include_type: 'system')
+exe2 = executable('main2', ['main.cpp'], dependencies: [sub2_config],
   link_depends: [tgt_internal, tgt_test2])
 
 test('test1', exe1)
