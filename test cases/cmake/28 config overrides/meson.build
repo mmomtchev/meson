@@ -3,7 +3,7 @@ project('cmakeSubTest', ['c', 'cpp'])
 cm = import('cmake')
 sub_pro = cm.subproject('cmMod')
 
-# TODO: CMake add_dependency does not work with INTERFACE targets
+# TODO: In meson, CMake add_dependency does not work with all targets
 # Ensure that all targets are built
 tgt_internal = sub_pro.target('cmModLib_internal')
 tgt_test2 = sub_pro.target('test2')

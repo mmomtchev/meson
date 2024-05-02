@@ -17,8 +17,8 @@ add_library(cmModLib++ INTERFACE)
 target_link_libraries(cmModLib++ INTERFACE cmMod::cmModLib++)
 
 # This is a standalone executable that uses one of the libraries
-# It is a specific test that ensure deduping of '-L' arguments when
+# It is a specific test to ensure deduping of '-L' arguments when
 # the meson cmake interpreter uses the fileAPI to process the targets
 add_executable(test2 test2.cpp)
 target_link_libraries(test2 cmModLib2)
-add_dependencies(test2 cmModLib_internal)
+add_dependencies(cmModLib2 cmModLib_internal)
