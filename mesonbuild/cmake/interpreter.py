@@ -1111,11 +1111,12 @@ class CMakeInterpreter:
                     process_target(i)
                 objec_libs += [extract_tgt(i)]
             for i in tgt.depends:
-                if not isinstance(i, ConverterCustomTarget):
-                    continue
-                if i.name not in processed:
-                    process_custom_target(i)
-                dependencies += [extract_tgt(i)]
+                if isinstance(i, ConverterCustomTarget):
+                    if i.name not in processed:
+                        process_custom_target(i)
+                    dependencies += [extract_tgt(i)]
+                else:
+                    link_with += [extract_tgt(i)]
 
             # Generate the source list and handle generated sources
             sources += tgt.sources
