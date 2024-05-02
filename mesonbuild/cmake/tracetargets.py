@@ -130,10 +130,14 @@ def resolve_cmake_trace_targets(target_name: str,
 
         if 'LINK_LIBRARIES' in tgt.properties:
             targets += [x for x in tgt.properties['LINK_LIBRARIES'] if x and x in trace.targets]
-            res.libraries += [(f'-l{x}' if not x.startswith('-') else x) for x in tgt.properties['LINK_LIBRARIES'] if x and x not in trace.targets]
+            for lib in tgt.properties['LINK_LIBRARIES']:
+                if lib and not lib in trace.targets:
+                    res.libraries.append(f'-l{lib}' if not lib.startswith('-') and not '/' in lib else lib)
         if 'INTERFACE_LINK_LIBRARIES' in tgt.properties:
             targets += [x for x in tgt.properties['INTERFACE_LINK_LIBRARIES'] if x and x in trace.targets]
-            res.libraries += [(f'-l{x}' if not x.startswith('-') else x) for x in tgt.properties['INTERFACE_LINK_LIBRARIES'] if x and x not in trace.targets]
+            for lib in tgt.properties['INTERFACE_LINK_LIBRARIES']:
+                if lib and not lib in trace.targets:
+                    res.libraries.append(f'-l{lib}' if not lib.startswith('-') and not '/' in lib else lib)
         if 'LINK_DIRECTORIES' in tgt.properties:
             res.link_flags += [(f'-L{x}' if not x.startswith('-') else x) for x in tgt.properties['LINK_DIRECTORIES'] if x]
         if 'INTERFACE_LINK_DIRECTORIES' in tgt.properties:
