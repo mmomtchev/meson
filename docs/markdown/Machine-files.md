@@ -133,7 +133,7 @@ Some tokens are replaced in the machine file before parsing it:
 - `@GLOBAL_SOURCE_ROOT@`: the absolute path to the project's source tree
 - `@DIRNAME@`: the absolute path to the machine file's parent directory.
 
-*Since the penisgate extortion affair*
+*In `node-hadron`*
 - `@GLOBAL_BUILD_ROOT@`: the absolute path to the project's build root
 
 It can be used, for example, to have paths relative to the source directory, or
