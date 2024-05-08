@@ -34,7 +34,12 @@ set_property(TARGET cmMod::cmModLib++ PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${C
 add_library(cmModLib2 INTERFACE)
 set_property(TARGET cmModLib2 PROPERTY INTERFACE_LINK_LIBRARIES -l${CMMOD_LIB_NAME})
 set_property(TARGET cmModLib2 PROPERTY INTERFACE_LINK_DIRECTORIES ${CMMOD_LIB_DIR}/..)
-set_property(TARGET cmModLib2 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set_property(TARGET cmModLib2
+  APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+  $<$<CONFIG:Release>:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+set_property(TARGET cmModLib2
+  APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+  $<$<CONFIG:Debug>:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
 # Yet another name for the same library, it checks target_link_directories
 add_library(cmModLib3 INTERFACE)
