@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-import json, subprocess, os, sys, tarfile
+import json, subprocess, os, sys, tarfile, io
 import urllib.request, urllib.error, urllib.parse
 from pathlib import Path
 import typing as T
@@ -31,6 +31,11 @@ mod_kwargs -= {'name_prefix', 'name_suffix'}
 
 _MOD_KWARGS = [k for k in SHARED_MOD_KWS if k.name not in {'name_prefix', 'name_suffix'}]
 
+def tar_strip1(files: T.List[tarfile.TarInfo]):
+    for member in files:
+        member.path = str(Path(*Path(member.path).parts[1:]))
+        yield member
+
 class NapiModule(ExtensionModule):
 
     INFO = ModuleInfo('node_api', '2.0.0')
@@ -46,22 +51,21 @@ class NapiModule(ExtensionModule):
         if url.endswith('.tar.gz'):
             if not os.path.exists(dest):
                 mlog.log(f'Downloading {url} to {dest}')
-                strip1 = lambda member, path: member.replace(name=Path(*Path(member.path).parts[1:]))
-                with tarfile.open(fileobj=remote, mode='r:gz') as input:
-                    input.extractall(path=dest, filter=strip1)
+                with tarfile.open(fileobj=io.BytesIO(remote.read()), mode='r:gz') as input:
+                    input.extractall(path=dest, members=tar_strip1(input.getmembers()))
         else:
-            if not os.path.exists(dest):
-                file = urllib.parse(url)
-                input = Path(dest, os.path.basename(file.path))
-                mlog.log(f'Downloading {url} to {str(input)}')
+            filename = urllib.parse.urlparse(url)
+            file = Path(dest, os.path.basename(filename.path))
+            if not os.path.exists(file):
+                mlog.log(f'Downloading {url} to {str(file)}')
                 with file.open('wb') as output:
-                    output.write(url.read())
+                    output.write(remote.read())
 
     def download_headers(self) -> None:
         try:
             node_json = subprocess.Popen(['node', '-p', 'JSON.stringify(process)'], shell=False, stdout=subprocess.PIPE)
-            node_json.wait()
             data, err = node_json.communicate()
+            node_json.wait()
             node_process = json.loads(data)
         except Exception as e:
             raise mesonlib.MesonException(f'Failed spawning node: {str(e)}')
