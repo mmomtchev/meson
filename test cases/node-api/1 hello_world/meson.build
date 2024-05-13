@@ -6,7 +6,9 @@ project(
 
 napi = import('node_api')
 
-napi.extension_module(
+addon = napi.extension_module(
   'hello_world',
   [ 'hello_world.cc' ]
   )
+
+napi.test('hello_world_test', 'test.js', addon)
