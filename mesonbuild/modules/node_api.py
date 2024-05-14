@@ -28,13 +28,39 @@ if T.TYPE_CHECKING:
     SourcesVarargsType = T.List[T.Union[str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget]]
 
 name_prefix = ''
-name_suffix = 'node'
+name_suffix_native = 'node'
+name_suffix_wasm = 'mjs'
 
 mod_kwargs = set()
 mod_kwargs.update(known_shmod_kwargs)
 mod_kwargs -= {'name_prefix', 'name_suffix'}
 
 _MOD_KWARGS = [k for k in SHARED_MOD_KWS if k.name not in {'name_prefix', 'name_suffix'}]
+
+# TODO: Convert these to module options
+emscripten_default_link_args = [
+    '-sDEFAULT_PTHREAD_STACK_SIZE=1MB',
+    '-sPTHREAD_POOL_SIZE=4',
+    #'-Wno-emcc',
+    #'-Wno-pthreads-mem-growth',
+    '-sALLOW_MEMORY_GROWTH=1',
+    "-sEXPORTED_FUNCTIONS=['_malloc','_free','_napi_register_wasm_v1','_node_api_module_get_api_version_v1']",
+    #'-sEXPORTED_RUNTIME_METHODS=["FS"]',
+    #'-sINCOMING_MODULE_JS_API=["wasmMemory","buffer"]',
+    #'-sNO_DISABLE_EXCEPTION_CATCHING',
+    #'--bind',
+    #'-sMODULARIZE',
+    #'-sEXPORT_ES6=1',
+    #'-sEXPORT_NAME=' + 'test',
+    '-sSTACK_SIZE=2MB',
+    #'-sENVIRONMENT=web,webview,worker,node'
+]
+emscripten_default_link_args_debug = [
+    '-gsource-map',
+    '-sSAFE_HEAP=1',
+    '-sASSERTIONS=2',
+    '-sSTACK_OVERFLOW_CHECK=2'
+]
 
 def tar_strip1(files: T.List[tarfile.TarInfo]) -> T.Generator[tarfile.TarInfo, None, None]:
     for member in files:
@@ -56,16 +82,21 @@ class NapiModule(ExtensionModule):
             'test': self.test_method,
         })
 
+    def parse_node_json_output(self, code: str) -> Any:
+        result: Any = None
+        try:
+            node_json = subprocess.Popen(['node', '-p', f'JSON.stringify({code})'], shell=False, stdout=subprocess.PIPE,
+                                         cwd=self.interpreter.environment.get_source_dir())
+            data, err = node_json.communicate()
+            node_json.wait()
+            result = json.loads(data)
+        except Exception as e:
+            raise mesonlib.MesonException(f'Failed spawning node: {str(e)}')
+        return result
+
     def load_node_process(self) -> None:
         if self.node_process is None:
-            try:
-                node_json = subprocess.Popen(['node', '-p', 'JSON.stringify(process)'], shell=False, stdout=subprocess.PIPE)
-                data, err = node_json.communicate()
-                node_json.wait()
-                self.node_process = json.loads(data)
-            except Exception as e:
-                raise mesonlib.MesonException(f'Failed spawning node: {str(e)}')
-
+            self.node_process = self.parse_node_json_output('process')
             self.get_napi_dir()
 
     def get_napi_dir(self) -> None:
@@ -104,16 +135,55 @@ class NapiModule(ExtensionModule):
 
         mlog.log('Node.js library distribution: ', mlog.bold(str(self.napi_dir)))
 
+    def emnapi_sources(self) -> T.List[Path]:
+        sources: T.List[str] = self.parse_node_json_output('require("emnapi").sources.map(x => path.relative(process.cwd(), x))')
+        return [Path(d) for d in sources]
+
+    def emnapi_include_dirs(self) -> T.List[Path]:
+        inc_dirs: T.List[str] = [self.parse_node_json_output('require("emnapi").include_dir')]
+        return [Path(d) for d in inc_dirs]
+
+    def emnapi_js_library(self) -> Path:
+        js_lib: str = self.parse_node_json_output('require("emnapi").js_library')
+        return js_lib
+
     @permittedKwargs(mod_kwargs)
     @typed_pos_args('node_api.extension_module', str, varargs=(str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget))
     @typed_kwargs('node_api.extension_module', *_MOD_KWARGS)
     def extension_module_method(self, node: mparser.BaseNode, args: T.Tuple[str, SourcesVarargsType], kwargs: SharedModuleKw) -> 'SharedModule':
         if 'include_directories' not in kwargs:
             kwargs['include_directories'] = []
+        kwargs['name_prefix'] = name_prefix
+        if 'cpp' not in self.interpreter.environment.get_coredata().compilers.host:
+            raise mesonlib.MesonException('Node-API requires C++')
+        if self.interpreter.environment.get_coredata().compilers.host['cpp'].id == 'emscripten':
+            # emscripten WASM mode
+            if 'c' not in self.interpreter.environment.get_coredata().compilers.host:
+                raise mesonlib.MesonException('Node-API requires C for WASM mode')
+
+            kwargs['name_suffix'] = name_suffix_wasm
+
+            kwargs.setdefault('link_args', []).extend(emscripten_default_link_args)
+            js_lib = self.emnapi_js_library()
+            kwargs['link_args'].append(f'--js-library={js_lib}')
+
+            #kwargs.setdefault('c_args', []).append('-pthread')
+            #kwargs.setdefault('cpp_args', []).append('-pthread')
+            #kwargs['link_args'].append('-pthread')
+
+            inc_dirs = self.emnapi_include_dirs()
+            kwargs['include_directories'] += [str(d) for d in inc_dirs]
+
+            sources = self.emnapi_sources()
+            args[1].extend([str(d) for d in sources])
+
+        else:
+            # Node.js native mode
+            kwargs['name_suffix'] = name_suffix_native
+
         kwargs.setdefault('include_directories', []).append(str(self.napi_dir / 'include' / 'node'))
         kwargs.setdefault('include_directories', []).append(str(Path('node_modules') / 'node-addon-api'))
-        kwargs['name_prefix'] = name_prefix
-        kwargs['name_suffix'] = name_suffix
+
         return self.interpreter.build_target(node, args, kwargs, SharedModule)
 
     @typed_pos_args('node_api_extension.test', str, (str, mesonlib.File), (SharedModule, mesonlib.File))

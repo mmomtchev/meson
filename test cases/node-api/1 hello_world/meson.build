@@ -1,6 +1,6 @@
 project(
   'Hello World for meson',
-  ['cpp']
+  ['c', 'cpp']
 )
 
 napi = import('node_api')
@@ -10,4 +10,8 @@ addon = napi.extension_module(
   [ 'hello_world.cc' ]
   )
 
-napi.test('hello_world_test', 'test.js', addon)
+if meson.get_compiler('cpp').get_id() == 'emscripten'
+  napi.test('hello_world_test', 'test-wasm.mjs', addon)
+else
+  napi.test('hello_world_test', 'test-native.cjs', addon)
+endif
