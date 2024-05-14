@@ -22,7 +22,6 @@ from ..interpreterbase import (
 
 if T.TYPE_CHECKING:
     from ..interpreter import Interpreter
-    from ..interpreter.interpreter import BuildTargetSource
     from ..interpreter.kwargs import SharedModule as SharedModuleKw, FuncTest as FuncTestKw
     from typing import Any
 
@@ -70,7 +69,7 @@ class NapiModule(ExtensionModule):
             self.get_napi_dir()
 
     def get_napi_dir(self) -> None:
-        if sys.platform == 'linux' or sys.platform == 'darwin':
+        if sys.platform in 'linux':
             home = os.environ['HOME'] if 'HOME' in os.environ else '/tmp'
             self.napi_dir = Path(home) / '.cache' / 'node-hadron' / self.node_process['release']['name'] / self.node_process['version']
         elif sys.platform == 'darwin':
@@ -104,7 +103,6 @@ class NapiModule(ExtensionModule):
             self.download_item(self.node_process['release']['libUrl'], self.napi_dir)
 
         mlog.log('Node.js library distribution: ', mlog.bold(str(self.napi_dir)))
-        return None
 
     @permittedKwargs(mod_kwargs)
     @typed_pos_args('node_api.extension_module', str, varargs=(str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget))
