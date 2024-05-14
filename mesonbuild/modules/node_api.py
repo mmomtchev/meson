@@ -29,7 +29,7 @@ if T.TYPE_CHECKING:
 name_prefix = ''
 name_suffix = 'node'
 
-mod_kwargs = {'subdir', 'limited_api'}
+mod_kwargs = set()
 mod_kwargs.update(known_shmod_kwargs)
 mod_kwargs -= {'name_prefix', 'name_suffix'}
 
@@ -132,17 +132,18 @@ class NapiModule(ExtensionModule):
 
         node_js = ''
         if isinstance(js, mesonlib.File):
-            node_js = js.absolute_path()
+            node_js = js
         else:
-            node_js = str(Path(self.interpreter.environment.source_dir) / js)
+            node_js = mesonlib.File(False, '', js)
 
         node_arg = ''
         if isinstance(addon, SharedModule):
             kwargs.setdefault('depends', []).append(addon)
-            node_arg = str(Path(addon.subdir) / addon.get_filename())
+            node_arg = addon
 
         kwargs.setdefault('args', []).insert(0, node_arg)
-        kwargs.setdefault('args', []).insert(0, node_js)
+        kwargs['args'].insert(0, node_js)
+
         self.interpreter.add_test(node, (test_name, ExternalProgram('node')), kwargs, True)
 
 def initialize(interpreter: 'Interpreter') -> NapiModule:
