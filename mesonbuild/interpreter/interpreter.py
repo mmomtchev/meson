@@ -1255,7 +1255,7 @@ class Interpreter(InterpreterBase, HoldableObject):
                         pkg_info = json.load(package_json)
                         if 'version' in pkg_info:
                             version = pkg_info['version']
-                except:
+                except Exception:
                     pass
 
             self.project_version = version
