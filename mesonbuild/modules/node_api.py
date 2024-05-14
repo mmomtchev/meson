@@ -13,7 +13,7 @@ from . import ExtensionModule, ModuleInfo
 from .. import mesonlib
 from .. import mlog
 from .. import mparser
-from ..build import known_shmod_kwargs, CustomTarget, CustomTargetIndex, BuildTarget, GeneratedList, StructuredSources, ExtractedObjects, SharedModule, Executable
+from ..build import known_shmod_kwargs, CustomTarget, CustomTargetIndex, BuildTarget, GeneratedList, StructuredSources, ExtractedObjects, SharedModule
 from ..programs import ExternalProgram
 from ..interpreter.type_checking import SHARED_MOD_KWS, TEST_KWS
 from ..interpreterbase import (
@@ -23,8 +23,10 @@ from ..interpreterbase import (
 if T.TYPE_CHECKING:
     from ..interpreter import Interpreter
     from ..interpreter.interpreter import BuildTargetSource
-    from ..interpreter.kwargs import SharedModule as SharedModuleKw
+    from ..interpreter.kwargs import SharedModule as SharedModuleKw, FuncTest as FuncTestKw
+    from typing import Any
 
+    SourcesVarargsType = T.List[T.Union[str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget]]
 
 name_prefix = ''
 name_suffix = 'node'
@@ -35,7 +37,7 @@ mod_kwargs -= {'name_prefix', 'name_suffix'}
 
 _MOD_KWARGS = [k for k in SHARED_MOD_KWS if k.name not in {'name_prefix', 'name_suffix'}]
 
-def tar_strip1(files: T.List[tarfile.TarInfo]):
+def tar_strip1(files: T.List[tarfile.TarInfo]) -> T.Generator[tarfile.TarInfo, None, None]:
     for member in files:
         member.path = str(Path(*Path(member.path).parts[1:]))
         yield member
@@ -76,7 +78,7 @@ class NapiModule(ExtensionModule):
             self.napi_dir = Path(home) / 'Library' / 'Caches' / 'node-hadron' / self.node_process['release']['name'] / self.node_process['version']
         elif sys.platform == 'win32':
             home = os.environ['LOCALAPPDATA'] if 'LOCALAPPDATA' in os.environ else 'C:\\'
-            self.napi_dir = Path(home) / 'node-hadron' / node_process['release']['name'] / self.node_process['version']
+            self.napi_dir = Path(home) / 'node-hadron' / self.node_process['release']['name'] / self.node_process['version']
         else:
             raise mesonlib.MesonException(f'Unsupported platform: {sys.platform}')
 
@@ -101,13 +103,13 @@ class NapiModule(ExtensionModule):
         if 'libUrl' in self.node_process['release']:
             self.download_item(self.node_process['release']['libUrl'], self.napi_dir)
 
-        mlog.log(f'Node.js library distribution: ', mlog.bold(str(self.napi_dir)))
+        mlog.log('Node.js library distribution: ', mlog.bold(str(self.napi_dir)))
         return None
 
     @permittedKwargs(mod_kwargs)
     @typed_pos_args('node_api.extension_module', str, varargs=(str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget))
     @typed_kwargs('node_api.extension_module', *_MOD_KWARGS)
-    def extension_module_method(self, node: mparser.BaseNode, args: T.Tuple[str, T.List[BuildTargetSource]], kwargs: SharedModuleKw) -> 'SharedModule':
+    def extension_module_method(self, node: mparser.BaseNode, args: T.Tuple[str, SourcesVarargsType], kwargs: SharedModuleKw) -> 'SharedModule':
         if 'include_directories' not in kwargs:
             kwargs['include_directories'] = []
         kwargs.setdefault('include_directories', []).append(str(self.napi_dir / 'include' / 'node'))
@@ -119,12 +121,12 @@ class NapiModule(ExtensionModule):
     @typed_pos_args('node_api_extension.test', str, (str, mesonlib.File), (SharedModule, mesonlib.File))
     @typed_kwargs('node_api_extenstion.test', *TEST_KWS, KwargInfo('is_parallel', bool, default=True))
     def test_method(self, node: mparser.BaseNode,
-                  args: T.Tuple[
-                    str,
-                    T.Union[str, mesonlib.File],
-                    T.Union[SharedModule, mesonlib.File]
-                    ],
-                  kwargs: 'kwtypes.FuncTest') -> None:
+                    args: T.Tuple[
+                        str,
+                        T.Union[str, mesonlib.File],
+                        T.Union[SharedModule, mesonlib.File]
+                        ],
+                    kwargs: 'FuncTestKw') -> None:
 
         test_name = args[0]
         script = args[1]
@@ -136,25 +138,25 @@ class NapiModule(ExtensionModule):
         else:
             node_script = mesonlib.File(False, '', script)
 
-        node_addon: SharedModule = None
-        node_path: Path = None
+        node_env = kwargs.setdefault('env', mesonlib.EnvironmentVariables())
+        node_env.set('NODE_PATH', [node_path])
+        node_addon: T.Union[SharedModule, mesonlib.File] = None
+        node_path: str = None
         if isinstance(addon, SharedModule):
             kwargs.setdefault('depends', []).append(addon)
             node_path = str((Path(self.interpreter.environment.get_build_dir()) / addon.subdir).resolve())
             node_addon = addon
+            node_env.set('NODE_ADDON', [node_addon.filename])
         elif isinstance(addon, mesonlib.File):
-            node_path = str(addon.absolute_path())
+            node_path = addon.absolute_path()
             node_addon = addon
+            node_env.set('NODE_ADDON', [str(node_addon.relative_name)])
         else:
             raise mesonlib.MesonException('The target must be either a napi.ExtensionModule or an ExternalProgram')
 
         kwargs.setdefault('args', []).insert(0, node_script)
 
-        node_env = kwargs.setdefault('env', mesonlib.EnvironmentVariables())
-        node_env.set('NODE_PATH', [node_path])
-        node_env.set('NODE_ADDON', [node_addon.filename])
-
-        self.interpreter.add_test(node, (test_name, ExternalProgram('node')), kwargs, True)
+        self.interpreter.add_test(node, (test_name, ExternalProgram('node')), T.cast('T.Dict[str, Any]', kwargs), True)
 
 def initialize(interpreter: 'Interpreter') -> NapiModule:
     mod = NapiModule(interpreter)
