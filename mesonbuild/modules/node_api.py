@@ -127,22 +127,32 @@ class NapiModule(ExtensionModule):
                   kwargs: 'kwtypes.FuncTest') -> None:
 
         test_name = args[0]
-        js = args[1]
+        script = args[1]
         addon = args[2]
 
-        node_js = ''
-        if isinstance(js, mesonlib.File):
-            node_js = js
+        node_script: mesonlib.File = None
+        if isinstance(script, mesonlib.File):
+            node_script = script
         else:
-            node_js = mesonlib.File(False, '', js)
+            node_script = mesonlib.File(False, '', script)
 
-        node_arg = ''
+        node_addon: SharedModule = None
+        node_path: Path = None
         if isinstance(addon, SharedModule):
             kwargs.setdefault('depends', []).append(addon)
-            node_arg = addon
+            node_path = str((Path(self.interpreter.environment.get_build_dir()) / addon.subdir).resolve())
+            node_addon = addon
+        elif isinstance(addon, mesonlib.File):
+            node_path = str(addon.absolute_path())
+            node_addon = addon
+        else:
+            raise mesonlib.MesonException('The target must be either a napi.ExtensionModule or an ExternalProgram')
 
-        kwargs.setdefault('args', []).insert(0, node_arg)
-        kwargs['args'].insert(0, node_js)
+        kwargs.setdefault('args', []).insert(0, node_script)
+
+        node_env = kwargs.setdefault('env', mesonlib.EnvironmentVariables())
+        node_env.set('NODE_PATH', [node_path])
+        node_env.set('NODE_ADDON', [node_addon.filename])
 
         self.interpreter.add_test(node, (test_name, ExternalProgram('node')), kwargs, True)
 
