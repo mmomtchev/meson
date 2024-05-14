@@ -139,7 +139,6 @@ class NapiModule(ExtensionModule):
             node_script = mesonlib.File(False, '', script)
 
         node_env = kwargs.setdefault('env', mesonlib.EnvironmentVariables())
-        node_env.set('NODE_PATH', [node_path])
         node_addon: T.Union[SharedModule, mesonlib.File] = None
         node_path: str = None
         if isinstance(addon, SharedModule):
@@ -153,6 +152,7 @@ class NapiModule(ExtensionModule):
             node_env.set('NODE_ADDON', [str(node_addon.relative_name)])
         else:
             raise mesonlib.MesonException('The target must be either a napi.ExtensionModule or an ExternalProgram')
+        node_env.set('NODE_PATH', [node_path])
 
         kwargs.setdefault('args', []).insert(0, node_script)
 

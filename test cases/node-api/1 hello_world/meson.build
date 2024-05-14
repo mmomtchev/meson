@@ -1,7 +1,6 @@
 project(
   'Hello World for meson',
-  ['cpp'],
-  version: run_command('node', '-p', 'require("./package.json").version', check: true).stdout().strip()
+  ['cpp']
 )
 
 napi = import('node_api')
