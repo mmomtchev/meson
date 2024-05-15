@@ -66,7 +66,7 @@ jobs:
     - uses: actions/checkout@v3
     - uses: mymindstorm/setup-emsdk@v14
     - name: Run tests
-      run: bash -c 'source /ci/env_vars.sh; cd $GITHUB_WORKSPACE; ./tools/run_with_cov.py ./run_tests.py $CI_ARGS --cross node-api-emscripten.json --cross-only'
+      run: bash -c 'source /ci/env_vars.sh; cd $GITHUB_WORKSPACE; ./tools/run_with_cov.py ./run_tests.py $CI_ARGS --cross node-api-emscripten.json --cross-only --only node-api'
 
     - name: Aggregate coverage reports
       run: ./ci/combine_cov.sh

@@ -10,6 +10,7 @@ run_command(['npm', '--prefix', meson.global_source_root(), 'install'], check: t
 addon = napi.extension_module(
   'hello_world',
   [ 'hello_world.cc' ],
+  install: true,
   node_api_options: { 'async_workers': true }
   )
 

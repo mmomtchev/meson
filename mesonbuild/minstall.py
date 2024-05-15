@@ -750,12 +750,10 @@ class Installer:
                     if os.path.exists(wasm_source):
                         wasm_output = os.path.splitext(outname)[0] + '.wasm'
                         file_copied = self.do_copyfile(wasm_source, wasm_output)
-                        self.log('Installing WASM binary {}'.format(wasm_source))
                     worker_source = os.path.splitext(fname)[0] + '.worker' + os.path.splitext(fname)[1]
                     if os.path.exists(worker_source):
                         worker_output = os.path.splitext(outname)[0] + '.worker' + os.path.splitext(fname)[1]
                         file_copied = self.do_copyfile(worker_source, worker_output)
-                        self.log('Installing worker script {}'.format(worker_source))
             elif os.path.isdir(fname):
                 fname = os.path.join(d.build_dir, fname.rstrip('/'))
                 outname = os.path.join(outdir, os.path.basename(fname))

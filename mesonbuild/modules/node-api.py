@@ -227,6 +227,7 @@ class NapiModule(ExtensionModule):
         if 'cpp' not in self.interpreter.environment.get_coredata().compilers.host:
             raise mesonlib.MesonException('Node-API requires C++')
         source_dir = self.source_root / node.subdir
+        kwargs.setdefault('install_dir', [''])
         if self.interpreter.environment.get_coredata().compilers.host['cpp'].id == 'emscripten':
             # emscripten WASM mode
             if 'c' not in self.interpreter.environment.get_coredata().compilers.host:

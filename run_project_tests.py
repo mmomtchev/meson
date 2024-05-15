@@ -239,6 +239,18 @@ class InstalledFile:
                 return None
         elif self.typ == 'expr':
             return Path(platform_fix_name(p.as_posix(), canonical_compiler, env))
+        elif self.typ == 'js_module_main':
+            if 'emscripten' in canonical_compiler:
+                return p.with_suffix('.mjs')
+            return p.with_suffix('.node')
+        elif self.typ == 'js_module_ext':
+            if 'emscripten' in canonical_compiler:
+                return p.with_suffix('.wasm')
+            return None
+        elif self.typ == 'js_module_worker':
+            if 'emscripten' in canonical_compiler:
+                return p.with_suffix('.worker.mjs')
+            return None
         else:
             raise RuntimeError(f'Invalid installed file type {self.typ}')
 
