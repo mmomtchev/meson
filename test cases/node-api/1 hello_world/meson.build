@@ -5,6 +5,8 @@ project(
 
 napi = import('node-api')
 
+run_command(['npm', '--prefix', meson.global_source_root(), 'install'], check: true)
+
 addon = napi.extension_module(
   'hello_world',
   [ 'hello_world.cc' ]
