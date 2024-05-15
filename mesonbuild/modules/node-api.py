@@ -92,6 +92,7 @@ class NapiModule(ExtensionModule):
         self.node_process: Any = None
         self.emnapi_package: Any = None
         self.napi_dir: Path = None
+        self.source_root: Path = Path(interpreter.environment.get_source_dir())
         self.load_node_process()
         self.download_headers()
         self.methods.update({
@@ -102,8 +103,8 @@ class NapiModule(ExtensionModule):
     def parse_node_json_output(self, code: str) -> Any:
         result: Any = None
         try:
-            node_json = subprocess.Popen(['node', '-p', f'JSON.stringify({code})'], shell=False, stdout=subprocess.PIPE,
-                                         cwd=self.interpreter.environment.get_source_dir())
+            node_json = subprocess.Popen(['node', '-p', f'JSON.stringify({code})'], shell=False,
+                                         stdout=subprocess.PIPE, cwd=self.source_root)
             data, err = node_json.communicate()
             node_json.wait()
             result = json.loads(data)
@@ -183,22 +184,38 @@ class NapiModule(ExtensionModule):
 
         mlog.log('Node.js library distribution: ', mlog.bold(str(self.napi_dir)))
 
-    def emnapi_sources(self) -> T.List[Path]:
+    # Transform path to relative if it is inside the project subdir
+    # Use ../.. if it is relative to the project root, but not the project subdir
+    def relativize(self, p: T.Union[str, Path], source_dir: Path) -> Path:
+        r: Path = p if isinstance(p, Path) else Path(p)
+        if r.is_relative_to(source_dir):
+            return r.relative_to(source_dir)
+        if not r.is_relative_to(self.source_root):
+            return r
+        # walk_up in pathlib requires Python 3.12
+        return Path(os.path.relpath(str(r), str(source_dir)))
+
+    # Transform path to absolute relative to the project root (package.json)
+    def resolve(self, p: T.Union[str, Path]) -> Path:
+        r: Path = p if isinstance(p, Path) else Path(p)
+        if r.is_absolute():
+            return r
+        return self.source_root / r
+
+    def emnapi_sources(self, source_root: Path) -> T.List[Path]:
         self.load_emnapi_package()
         sources: T.List[str] = self.emnapi_package['sources']
-        source_root = Path(self.interpreter.environment.get_source_dir())
-        return [(Path(d).relative_to(source_root) if Path(d).is_relative_to(source_root) else Path(d)) for d in sources]
+        return [self.relativize(self.resolve(d), source_root) for d in sources]
 
-    def emnapi_include_dirs(self) -> T.List[Path]:
+    def emnapi_include_dirs(self, source_root: Path) -> T.List[Path]:
         self.load_emnapi_package()
         inc_dirs: T.List[str] = [self.emnapi_package['include_dir']]
-        source_root = Path(self.interpreter.environment.get_source_dir())
-        return [(Path(d).relative_to(source_root) if Path(d).is_relative_to(source_root) else Path(d)) for d in inc_dirs]
+        return [self.relativize(self.resolve(d), source_root) for d in inc_dirs]
 
-    def emnapi_js_library(self) -> Path:
+    def emnapi_js_library(self, source_root: Path) -> Path:
         self.load_emnapi_package()
         js_lib: str = self.emnapi_package['js_library']
-        return js_lib
+        return Path(js_lib)
 
     @permittedKwargs(mod_kwargs)
     @typed_pos_args('node-api.extension_module', str, varargs=(str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget))
@@ -209,6 +226,7 @@ class NapiModule(ExtensionModule):
         kwargs['name_prefix'] = name_prefix
         if 'cpp' not in self.interpreter.environment.get_coredata().compilers.host:
             raise mesonlib.MesonException('Node-API requires C++')
+        source_dir = self.source_root / node.subdir
         if self.interpreter.environment.get_coredata().compilers.host['cpp'].id == 'emscripten':
             # emscripten WASM mode
             if 'c' not in self.interpreter.environment.get_coredata().compilers.host:
@@ -221,21 +239,22 @@ class NapiModule(ExtensionModule):
             kwargs.setdefault('c_args', []).extend(extra_c_args)
             kwargs.setdefault('cpp_args', []).extend(extra_c_args)
 
-            js_lib = self.emnapi_js_library()
+            js_lib = self.emnapi_js_library(source_dir)
             kwargs['link_args'].append(f'--js-library={js_lib}')
 
-            inc_dirs = self.emnapi_include_dirs()
+            inc_dirs = self.emnapi_include_dirs(source_dir)
             kwargs['include_directories'] += [str(d) for d in inc_dirs]
 
-            sources = self.emnapi_sources()
+            sources = self.emnapi_sources(source_dir)
             args[1].extend([str(d) for d in sources])
 
         else:
             # Node.js native mode
             kwargs['name_suffix'] = name_suffix_native
 
-        kwargs.setdefault('include_directories', []).append(str(self.napi_dir / 'include' / 'node'))
-        kwargs.setdefault('include_directories', []).append(str(Path('node_modules') / 'node-addon-api'))
+        napi_dir = self.relativize(self.napi_dir / 'include' / 'node', source_dir)
+        node_addon_api_dir = self.relativize(str(Path(node.source_root) / 'node_modules' / 'node-addon-api'), source_dir)
+        kwargs.setdefault('include_directories', []).extend([str(napi_dir), str(node_addon_api_dir)])
 
         return self.interpreter.build_target(node, args, kwargs, SharedModule)
 
@@ -257,7 +276,7 @@ class NapiModule(ExtensionModule):
         if isinstance(script, mesonlib.File):
             node_script = script
         else:
-            node_script = mesonlib.File(False, '', script)
+            node_script = mesonlib.File(False, node.subdir, script)
 
         node_env = kwargs.setdefault('env', mesonlib.EnvironmentVariables())
         node_addon: T.Union[SharedModule, mesonlib.File] = None
