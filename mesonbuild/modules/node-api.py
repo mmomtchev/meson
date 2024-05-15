@@ -7,9 +7,10 @@ from __future__ import annotations
 import json, subprocess, os, sys, tarfile, io
 import urllib.request, urllib.error, urllib.parse
 from pathlib import Path
+from enum import Enum
 import typing as T
 
-from . import ExtensionModule, ModuleInfo
+from . import ExtensionModule, ModuleInfo, ModuleObject
 from .. import mesonlib
 from .. import mlog
 from .. import mparser
@@ -23,6 +24,7 @@ from ..interpreterbase import (
 if T.TYPE_CHECKING:
     from ..interpreter import Interpreter
     from ..interpreter.kwargs import SharedModule as SharedModuleKw, FuncTest as FuncTestKw
+    from ..interpreterbase import TYPE_kwargs, TYPE_var
     from typing import Any
 
     SourcesVarargsType = T.List[T.Union[str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget]]
@@ -31,36 +33,50 @@ name_prefix = ''
 name_suffix_native = 'node'
 name_suffix_wasm = 'mjs'
 
-mod_kwargs = set()
+mod_kwargs = { 'node_api_options' }
 mod_kwargs.update(known_shmod_kwargs)
 mod_kwargs -= {'name_prefix', 'name_suffix'}
 
 _MOD_KWARGS = [k for k in SHARED_MOD_KWS if k.name not in {'name_prefix', 'name_suffix'}]
 
-# TODO: Convert these to module options
-emscripten_default_link_args = [
-    '-sDEFAULT_PTHREAD_STACK_SIZE=1MB',
-    '-sPTHREAD_POOL_SIZE=4',
-    #'-Wno-emcc',
-    #'-Wno-pthreads-mem-growth',
-    '-sALLOW_MEMORY_GROWTH=1',
-    "-sEXPORTED_FUNCTIONS=['_malloc','_free','_napi_register_wasm_v1','_node_api_module_get_api_version_v1']",
-    #'-sEXPORTED_RUNTIME_METHODS=["FS"]',
-    #'-sINCOMING_MODULE_JS_API=["wasmMemory","buffer"]',
-    #'-sNO_DISABLE_EXCEPTION_CATCHING',
-    #'--bind',
-    #'-sMODULARIZE',
-    #'-sEXPORT_ES6=1',
-    #'-sEXPORT_NAME=' + 'test',
-    '-sSTACK_SIZE=2MB',
-    #'-sENVIRONMENT=web,webview,worker,node'
-]
+class NodeAPIEnv(Enum):
+    node    = 'node'
+    web     = 'web'
+    webview = 'webview'
+    worker  = 'worker'
+
+class NodeAPIOptions(T.TypedDict):
+    async_workers:  bool
+    async_pool:     int
+    es6:            bool
+    fs:             bool
+    stack:          str
+    exceptions:     bool
+    swig:           bool
+    environments:   T.Set[NodeAPIEnv]
+
+# These are the defauls
+node_api_defaults: NodeAPIOptions = {
+    'async_workers':    False,
+    'async_pool':       4,
+    'es6':              True,
+    'stack':            '2MB',
+    'exceptions':       True,
+    'swig':             False,
+    'environments':     { NodeAPIEnv.node, NodeAPIEnv.web, NodeAPIEnv.webview, NodeAPIEnv.worker }
+}
+_SUBDIR_KW = KwargInfo('node_api_options', dict, default=node_api_defaults)
+
 emscripten_default_link_args_debug = [
     '-gsource-map',
     '-sSAFE_HEAP=1',
     '-sASSERTIONS=2',
     '-sSTACK_OVERFLOW_CHECK=2'
 ]
+
+if T.TYPE_CHECKING:
+    class ExtensionModuleKw(SharedModuleKw):
+        options: NodeAPIOptions
 
 def tar_strip1(files: T.List[tarfile.TarInfo]) -> T.Generator[tarfile.TarInfo, None, None]:
     for member in files:
@@ -103,6 +119,33 @@ class NapiModule(ExtensionModule):
     def load_emnapi_package(self) -> None:
         if self.emnapi_package is None:
             self.emnapi_package = self.parse_node_json_output('require("emnapi")')
+
+    def construct_native_options(self, name:str, opts: NodeAPIOptions) -> T.Tuple[T.List[str], T.List[str]]:
+        return [], []
+
+    # As these options are mandatory in order to build an emnapi WASM module, they are hardcoded here
+    def construct_emscripten_options(self, name: str, opts: NodeAPIOptions) -> T.Tuple[T.List[str], T.List[str]]:
+        full_opts = {**node_api_defaults, **opts}
+        c_args = []
+        link_args = ['-Wno-emcc', '-Wno-pthreads-mem-growth', '-sALLOW_MEMORY_GROWTH=1',
+                     '-sEXPORTED_FUNCTIONS=["_malloc","_free","_napi_register_wasm_v1","_node_api_module_get_api_version_v1"]',
+                     '--bind', f'-sSTACK_SIZE={full_opts["stack"]}' ]
+
+        if full_opts['es6']:
+            link_args.extend(['-sMODULARIZE', '-sEXPORT_ES6=1', f'-sEXPORT_NAME={name}'])
+        if full_opts['async_workers']:
+            c_args.extend(['-phtread'])
+            link_args.extend(['-pthread', f'-sDEFAULT_PTHREAD_STACK_SIZE={full_opts["stack"]}',
+                              f'-sPTHREAD_POOL_SIZE={full_opts["async_workers"]}'])
+        if full_opts['exceptions'] or full_opts['swig']:
+            link_args.extend(['-sNO_DISABLE_EXCEPTION_CATCHING'])
+
+        env = '-sENVIRONMENT='
+        for e in full_opts['environments']:
+            env += f'{e.value},'
+        link_args.append(env)
+
+        return c_args, link_args
 
     def get_napi_dir(self) -> None:
         if sys.platform in 'linux':
@@ -159,8 +202,8 @@ class NapiModule(ExtensionModule):
 
     @permittedKwargs(mod_kwargs)
     @typed_pos_args('node-api.extension_module', str, varargs=(str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget))
-    @typed_kwargs('node-api.extension_module', *_MOD_KWARGS)
-    def extension_module_method(self, node: mparser.BaseNode, args: T.Tuple[str, SourcesVarargsType], kwargs: SharedModuleKw) -> 'SharedModule':
+    @typed_kwargs('node-api.extension_module', *_MOD_KWARGS, _SUBDIR_KW)
+    def extension_module_method(self, node: mparser.BaseNode, args: T.Tuple[str, SourcesVarargsType], kwargs: ExtensionModuleKw) -> 'SharedModule':
         if 'include_directories' not in kwargs:
             kwargs['include_directories'] = []
         kwargs['name_prefix'] = name_prefix
@@ -173,13 +216,13 @@ class NapiModule(ExtensionModule):
 
             kwargs['name_suffix'] = name_suffix_wasm
 
-            kwargs.setdefault('link_args', []).extend(emscripten_default_link_args)
+            extra_c_args, extra_link_args = self.construct_emscripten_options(args[0], kwargs['node_api_options'])
+            kwargs.setdefault('link_args', []).extend(extra_link_args)
+            kwargs.setdefault('c_args', []).extend(extra_c_args)
+            kwargs.setdefault('cpp_args', []).extend(extra_c_args)
+
             js_lib = self.emnapi_js_library()
             kwargs['link_args'].append(f'--js-library={js_lib}')
-
-            #kwargs.setdefault('c_args', []).append('-pthread')
-            #kwargs.setdefault('cpp_args', []).append('-pthread')
-            #kwargs['link_args'].append('-pthread')
 
             inc_dirs = self.emnapi_include_dirs()
             kwargs['include_directories'] += [str(d) for d in inc_dirs]
