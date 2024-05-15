@@ -74,6 +74,7 @@ class NapiModule(ExtensionModule):
     def __init__(self, interpreter: 'Interpreter') -> None:
         super().__init__(interpreter)
         self.node_process: Any = None
+        self.emnapi_package: Any = None
         self.napi_dir: Path = None
         self.load_node_process()
         self.download_headers()
@@ -98,6 +99,10 @@ class NapiModule(ExtensionModule):
         if self.node_process is None:
             self.node_process = self.parse_node_json_output('process')
             self.get_napi_dir()
+
+    def load_emnapi_package(self) -> None:
+        if self.emnapi_package is None:
+            self.emnapi_package = self.parse_node_json_output('require("emnapi")')
 
     def get_napi_dir(self) -> None:
         if sys.platform in 'linux':
@@ -136,15 +141,20 @@ class NapiModule(ExtensionModule):
         mlog.log('Node.js library distribution: ', mlog.bold(str(self.napi_dir)))
 
     def emnapi_sources(self) -> T.List[Path]:
-        sources: T.List[str] = self.parse_node_json_output('require("emnapi").sources.map(x => path.relative(process.cwd(), x))')
-        return [Path(d) for d in sources]
+        self.load_emnapi_package()
+        sources: T.List[str] = self.emnapi_package['sources']
+        source_root = Path(self.interpreter.environment.get_source_dir())
+        return [(Path(d).relative_to(source_root) if Path(d).is_relative_to(source_root) else Path(d)) for d in sources]
 
     def emnapi_include_dirs(self) -> T.List[Path]:
-        inc_dirs: T.List[str] = [self.parse_node_json_output('require("emnapi").include_dir')]
-        return [Path(d) for d in inc_dirs]
+        self.load_emnapi_package()
+        inc_dirs: T.List[str] = [self.emnapi_package['include_dir']]
+        source_root = Path(self.interpreter.environment.get_source_dir())
+        return [(Path(d).relative_to(source_root) if Path(d).is_relative_to(source_root) else Path(d)) for d in inc_dirs]
 
     def emnapi_js_library(self) -> Path:
-        js_lib: str = self.parse_node_json_output('require("emnapi").js_library')
+        self.load_emnapi_package()
+        js_lib: str = self.emnapi_package['js_library']
         return js_lib
 
     @permittedKwargs(mod_kwargs)
