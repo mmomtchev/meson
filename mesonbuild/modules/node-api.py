@@ -69,7 +69,7 @@ def tar_strip1(files: T.List[tarfile.TarInfo]) -> T.Generator[tarfile.TarInfo, N
 
 class NapiModule(ExtensionModule):
 
-    INFO = ModuleInfo('node_api', '2.0.0')
+    INFO = ModuleInfo('node-api', '2.0.0')
 
     def __init__(self, interpreter: 'Interpreter') -> None:
         super().__init__(interpreter)
@@ -148,8 +148,8 @@ class NapiModule(ExtensionModule):
         return js_lib
 
     @permittedKwargs(mod_kwargs)
-    @typed_pos_args('node_api.extension_module', str, varargs=(str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget))
-    @typed_kwargs('node_api.extension_module', *_MOD_KWARGS)
+    @typed_pos_args('node-api.extension_module', str, varargs=(str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget))
+    @typed_kwargs('node-api.extension_module', *_MOD_KWARGS)
     def extension_module_method(self, node: mparser.BaseNode, args: T.Tuple[str, SourcesVarargsType], kwargs: SharedModuleKw) -> 'SharedModule':
         if 'include_directories' not in kwargs:
             kwargs['include_directories'] = []

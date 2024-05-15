@@ -3,7 +3,7 @@ project(
   ['c', 'cpp']
 )
 
-napi = import('node_api')
+napi = import('node-api')
 
 addon = napi.extension_module(
   'hello_world',
