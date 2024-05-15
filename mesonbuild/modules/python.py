@@ -55,7 +55,7 @@ if T.TYPE_CHECKING:
     MaybePythonProg = T.Union[NonExistingExternalProgram, 'PythonExternalProgram']
 
 
-mod_kwargs = {}
+mod_kwargs = {'subdir', 'limited_api'}
 mod_kwargs.update(known_shmod_kwargs)
 mod_kwargs -= {'name_prefix', 'name_suffix'}
 
