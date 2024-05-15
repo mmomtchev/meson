@@ -135,9 +135,9 @@ class NapiModule(ExtensionModule):
         if full_opts['es6']:
             link_args.extend(['-sMODULARIZE', '-sEXPORT_ES6=1', f'-sEXPORT_NAME={name}'])
         if full_opts['async_workers']:
-            c_args.extend(['-phtread'])
+            c_args.extend(['-pthread'])
             link_args.extend(['-pthread', f'-sDEFAULT_PTHREAD_STACK_SIZE={full_opts["stack"]}',
-                              f'-sPTHREAD_POOL_SIZE={full_opts["async_workers"]}'])
+                              f'-sPTHREAD_POOL_SIZE={full_opts["async_pool"]}'])
         if full_opts['exceptions'] or full_opts['swig']:
             link_args.extend(['-sNO_DISABLE_EXCEPTION_CATCHING'])
 
