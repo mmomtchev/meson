@@ -117,7 +117,7 @@ class NapiModule(ExtensionModule):
             self.emnapi_package = self.parse_node_json_output('require("emnapi")')
 
     def construct_native_options(self, name:str, opts: NodeAPIOptions) -> T.Tuple[T.List[str], T.List[str], T.List[str]]:
-        return [], []
+        return [], [], []
 
     # As these options are mandatory in order to build an emnapi WASM module, they are hardcoded here
     def construct_emscripten_options(self, name: str, opts: NodeAPIOptions) -> T.Tuple[T.List[str], T.List[str], T.List[str]]:
@@ -132,7 +132,7 @@ class NapiModule(ExtensionModule):
         # emscripten cannot link code compiled with -pthread with code compiled without it
         c_thread_count: int = self.interpreter.environment.coredata.options[mesonlib.OptionKey('thread_count', lang='c')].value
         cpp_thread_count: int = 0
-        if 'cpp' in self.interpreter.environment.get_coredata().compilers.host:
+        if 'cpp' in self.interpreter.environment.coredata.compilers.host:
             cpp_thread_count = self.interpreter.environment.coredata.options[mesonlib.OptionKey('thread_count', lang='cpp')].value
             exceptions = self.interpreter.environment.coredata.options[mesonlib.OptionKey('eh', lang='cpp')].value != 'none'
             if exceptions:
