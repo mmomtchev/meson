@@ -51,7 +51,6 @@ class NodeAPIOptions(T.TypedDict):
     es6:            bool
     fs:             bool
     stack:          str
-    exceptions:     bool
     swig:           bool
     environments:   T.Set[NodeAPIEnv]
 
@@ -60,7 +59,6 @@ node_api_defaults: NodeAPIOptions = {
     'async_pool':       4,
     'es6':              True,
     'stack':            '2MB',
-    'exceptions':       True,
     'swig':             False,
     'environments':     { NodeAPIEnv.node, NodeAPIEnv.web, NodeAPIEnv.webview, NodeAPIEnv.worker }
 }
@@ -136,12 +134,16 @@ class NapiModule(ExtensionModule):
         cpp_thread_count: int = 0
         if 'cpp' in self.interpreter.environment.get_coredata().compilers.host:
             cpp_thread_count = self.interpreter.environment.coredata.options[mesonlib.OptionKey('thread_count', lang='cpp')].value
+            exceptions = self.interpreter.environment.coredata.options[mesonlib.OptionKey('eh', lang='cpp')].value != 'none'
+            if exceptions:
+                link_args.append('-sNO_DISABLE_EXCEPTION_CATCHING')
+            if not exceptions and opts['swig']:
+                raise mesonlib.MesonException('SWIG-JSE requires C++ exceptions')
+
         if c_thread_count or cpp_thread_count:
             c_args.append(f'-DEMNAPI_WORKER_POOL_SIZE={opts["async_pool"]}')
             cpp_args.append(f'-DEMNAPI_WORKER_POOL_SIZE={opts["async_pool"]}')
             link_args.append(f'-sDEFAULT_PTHREAD_STACK_SIZE={opts["stack"]}')
-        if opts['exceptions'] or opts['swig']:
-            link_args.append('-sNO_DISABLE_EXCEPTION_CATCHING')
 
         env = '-sENVIRONMENT='
         for e in opts['environments']:
