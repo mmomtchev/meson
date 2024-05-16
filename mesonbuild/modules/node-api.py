@@ -65,7 +65,7 @@ node_api_defaults: NodeAPIOptions = {
     'swig':             False,
     'environments':     { NodeAPIEnv.node, NodeAPIEnv.web, NodeAPIEnv.webview, NodeAPIEnv.worker }
 }
-_SUBDIR_KW = KwargInfo('node_api_options', dict, default=node_api_defaults)
+_NODE_API_OPTS_KW = KwargInfo('node_api_options', dict, default=node_api_defaults)
 
 emscripten_default_link_args_debug = [
     '-gsource-map',
@@ -219,7 +219,7 @@ class NapiModule(ExtensionModule):
 
     @permittedKwargs(mod_kwargs)
     @typed_pos_args('node-api.extension_module', str, varargs=(str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget))
-    @typed_kwargs('node-api.extension_module', *_MOD_KWARGS, _SUBDIR_KW)
+    @typed_kwargs('node-api.extension_module', *_MOD_KWARGS, _NODE_API_OPTS_KW)
     def extension_module_method(self, node: mparser.BaseNode, args: T.Tuple[str, SourcesVarargsType], kwargs: ExtensionModuleKw) -> 'SharedModule':
         if 'include_directories' not in kwargs:
             kwargs['include_directories'] = []
