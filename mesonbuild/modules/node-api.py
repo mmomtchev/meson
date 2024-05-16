@@ -47,7 +47,6 @@ class NodeAPIEnv(Enum):
     worker  = 'worker'
 
 class NodeAPIOptions(T.TypedDict):
-    async_workers:  bool
     async_pool:     int
     es6:            bool
     fs:             bool
@@ -58,7 +57,6 @@ class NodeAPIOptions(T.TypedDict):
 
 # These are the defauls
 node_api_defaults: NodeAPIOptions = {
-    'async_workers':    False,
     'async_pool':       4,
     'es6':              True,
     'stack':            '2MB',
@@ -67,13 +65,6 @@ node_api_defaults: NodeAPIOptions = {
     'environments':     { NodeAPIEnv.node, NodeAPIEnv.web, NodeAPIEnv.webview, NodeAPIEnv.worker }
 }
 _NODE_API_OPTS_KW = KwargInfo('node_api_options', dict, default=node_api_defaults)
-
-emscripten_default_link_args_debug = [
-    '-gsource-map',
-    '-sSAFE_HEAP=1',
-    '-sASSERTIONS=2',
-    '-sSTACK_OVERFLOW_CHECK=2'
-]
 
 if T.TYPE_CHECKING:
     class ExtensionModuleKw(SharedModuleKw):
@@ -122,31 +113,35 @@ class NapiModule(ExtensionModule):
         if self.emnapi_package is None:
             self.emnapi_package = self.parse_node_json_output('require("emnapi")')
 
-    def construct_native_options(self, name:str, opts: NodeAPIOptions) -> T.Tuple[T.List[str], T.List[str]]:
+    def construct_native_options(self, name:str, opts: NodeAPIOptions) -> T.Tuple[T.List[str], T.List[str], T.List[str]]:
         return [], []
 
     # As these options are mandatory in order to build an emnapi WASM module, they are hardcoded here
-    def construct_emscripten_options(self, name: str, opts: NodeAPIOptions) -> T.Tuple[T.List[str], T.List[str]]:
+    def construct_emscripten_options(self, name: str, opts: NodeAPIOptions) -> T.Tuple[T.List[str], T.List[str], T.List[str]]:
         c_args = []
+        cpp_args = []
         link_args = ['-Wno-emcc', '-Wno-pthreads-mem-growth', '-sALLOW_MEMORY_GROWTH=1',
                      '-sEXPORTED_FUNCTIONS=["_malloc","_free","_napi_register_wasm_v1","_node_api_module_get_api_version_v1"]',
                      '--bind', f'-sSTACK_SIZE={opts["stack"]}' ]
 
         if opts['es6']:
             link_args.extend(['-sMODULARIZE', '-sEXPORT_ES6=1', f'-sEXPORT_NAME={name}'])
-        if opts['async_workers']:
-            c_args.extend(['-pthread'])
-            link_args.extend(['-pthread', f'-sDEFAULT_PTHREAD_STACK_SIZE={opts["stack"]}',
-                              f'-sPTHREAD_POOL_SIZE={opts["async_pool"]}'])
+        # emscripten cannot link code compiled with -pthread with code compiled without it
+        c_thread_count: int = self.interpreter.environment.coredata.options[mesonlib.OptionKey('thread_count', lang='c')].value
+        cpp_thread_count: int = self.interpreter.environment.coredata.options[mesonlib.OptionKey('thread_count', lang='cpp')].value
+        if c_thread_count or cpp_thread_count:
+            c_args.append(f'-DEMNAPI_WORKER_POOL_SIZE={opts["async_pool"]}')
+            cpp_args.append(f'-DEMNAPI_WORKER_POOL_SIZE={opts["async_pool"]}')
+            link_args.append(f'-sDEFAULT_PTHREAD_STACK_SIZE={opts["stack"]}')
         if opts['exceptions'] or opts['swig']:
-            link_args.extend(['-sNO_DISABLE_EXCEPTION_CATCHING'])
+            link_args.append('-sNO_DISABLE_EXCEPTION_CATCHING')
 
         env = '-sENVIRONMENT='
         for e in opts['environments']:
             env += f'{e.value},'
         link_args.append(env)
 
-        return c_args, link_args
+        return c_args, cpp_args, link_args
 
     def get_napi_dir(self) -> None:
         if sys.platform in 'linux':
@@ -225,21 +220,19 @@ class NapiModule(ExtensionModule):
         if 'include_directories' not in kwargs:
             kwargs['include_directories'] = []
         kwargs['name_prefix'] = name_prefix
-        if 'cpp' not in self.interpreter.environment.get_coredata().compilers.host:
-            raise mesonlib.MesonException('Node-API requires C++')
         source_dir = self.source_root / node.subdir
         kwargs.setdefault('install_dir', [''])
         opts = {**node_api_defaults, **kwargs['node_api_options']}
-        if self.interpreter.environment.get_coredata().compilers.host['cpp'].id == 'emscripten':
+        if self.interpreter.environment.machines.host.system == 'emscripten':
             # emscripten WASM mode
             if 'c' not in self.interpreter.environment.get_coredata().compilers.host:
-                raise mesonlib.MesonException('Node-API requires C for WASM mode')
+                raise mesonlib.MesonException('Node-API requires C to be enabled for WASM mode')
 
             kwargs['name_suffix'] = name_suffix_wasm_es6 if opts['es6'] else name_suffix_wasm_cjs
-            extra_c_args, extra_link_args = self.construct_emscripten_options(args[0], opts)
+            extra_c_args, extra_cpp_args, extra_link_args = self.construct_emscripten_options(args[0], opts)
             kwargs.setdefault('link_args', []).extend(extra_link_args)
             kwargs.setdefault('c_args', []).extend(extra_c_args)
-            kwargs.setdefault('cpp_args', []).extend(extra_c_args)
+            kwargs.setdefault('cpp_args', []).extend(extra_cpp_args)
 
             js_lib = self.emnapi_js_library(source_dir)
             kwargs['link_args'].append(f'--js-library={js_lib}')

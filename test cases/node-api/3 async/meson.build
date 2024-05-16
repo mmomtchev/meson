@@ -7,11 +7,13 @@ napi = import('node-api')
 
 run_command(['npm', '--prefix', meson.global_source_root(), 'install'], check: true)
 
+thread_dep = dependency('threads')
+
 addon = napi.extension_module(
   'hello_world',
   [ 'hello_world.cc' ],
-  install: true,
-  node_api_options: { 'async_workers': true }
+  dependencies: [ thread_dep ],
+  install: true
   )
 
 if meson.get_compiler('cpp').get_id() == 'emscripten'
