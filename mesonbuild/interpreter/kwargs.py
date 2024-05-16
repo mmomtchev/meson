@@ -333,6 +333,7 @@ class _BaseBuildTarget(TypedDict):
     install_mode: FileMode
     install_rpath: str
     implicit_include_directories: bool
+    include_directories: T.List[T.Union[str, build.IncludeDirs]]
     link_depends: T.List[T.Union[str, File, build.CustomTarget, build.CustomTargetIndex, build.BuildTarget]]
     link_language: T.Optional[str]
     name_prefix: T.Optional[str]
@@ -352,7 +353,6 @@ class _BuildTarget(_BaseBuildTarget):
     d_import_dirs: T.List[T.Union[str, build.IncludeDirs]]
     d_module_versions: T.List[T.Union[str, int]]
     d_unittest: bool
-    include_directories: T.List[T.Union[str, build.IncludeDirs]]
     rust_dependency_map: T.Dict[str, str]
     sources: SourcesVarargsType
     c_args: T.List[str]
