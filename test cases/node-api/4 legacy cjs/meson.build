@@ -13,7 +13,7 @@ addon = napi.extension_module(
   node_api_options: { 'es6': false }
   )
 
-if meson.get_compiler('cpp').get_id() == 'emscripten'
+if host_machine.system() == 'emscripten'
   napi.test('hello_world_test', 'test-wasm.mjs', addon)
 else
   napi.test('hello_world_test', 'test-native.cjs', addon)
