@@ -219,7 +219,8 @@ class NapiModule(ExtensionModule):
 
     @permittedKwargs(mod_kwargs)
     @typed_pos_args('node-api.extension_module', str, varargs=(str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget))
-    @typed_kwargs('node-api.extension_module', *_MOD_KWARGS, _NODE_API_OPTS_KW)
+    # TODO: For some strange reason, install_dir requires allow_unknown=True
+    @typed_kwargs('node-api.extension_module', *_MOD_KWARGS, _NODE_API_OPTS_KW, allow_unknown=True)
     def extension_module_method(self, node: mparser.BaseNode, args: T.Tuple[str, SourcesVarargsType], kwargs: ExtensionModuleKw) -> 'SharedModule':
         if 'include_directories' not in kwargs:
             kwargs['include_directories'] = []

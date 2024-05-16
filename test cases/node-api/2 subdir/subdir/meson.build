@@ -3,7 +3,8 @@ napi = import('node-api')
 addon = napi.extension_module(
   'hello_subworld',
   [ 'hello_subworld.cc' ],
-  install: true
+  install: true,
+  install_dir: 'sub'
   )
 
 if meson.get_compiler('cpp').get_id() == 'emscripten'
