@@ -82,6 +82,7 @@ class NapiModule(ExtensionModule):
     def __init__(self, interpreter: 'Interpreter') -> None:
         super().__init__(interpreter)
         self.node_process: Any = None
+        self.node_addon_api_package: Any = None
         self.emnapi_package: Any = None
         self.napi_dir: Path = None
         self.source_root: Path = Path(interpreter.environment.get_source_dir())
@@ -109,6 +110,10 @@ class NapiModule(ExtensionModule):
             self.node_process = self.parse_node_json_output('process')
             self.get_napi_dir()
 
+    def load_node_addon_api_package(self) -> None:
+        if self.node_addon_api_package is None:
+            self.node_addon_api_package = self.parse_node_json_output('require("node-addon-api")')
+
     def load_emnapi_package(self) -> None:
         if self.emnapi_package is None:
             self.emnapi_package = self.parse_node_json_output('require("emnapi")')
@@ -128,7 +133,9 @@ class NapiModule(ExtensionModule):
             link_args.extend(['-sMODULARIZE', '-sEXPORT_ES6=1', f'-sEXPORT_NAME={name}'])
         # emscripten cannot link code compiled with -pthread with code compiled without it
         c_thread_count: int = self.interpreter.environment.coredata.options[mesonlib.OptionKey('thread_count', lang='c')].value
-        cpp_thread_count: int = self.interpreter.environment.coredata.options[mesonlib.OptionKey('thread_count', lang='cpp')].value
+        cpp_thread_count: int = 0
+        if 'cpp' in self.interpreter.environment.get_coredata().compilers.host:
+            cpp_thread_count = self.interpreter.environment.coredata.options[mesonlib.OptionKey('thread_count', lang='cpp')].value
         if c_thread_count or cpp_thread_count:
             c_args.append(f'-DEMNAPI_WORKER_POOL_SIZE={opts["async_pool"]}')
             cpp_args.append(f'-DEMNAPI_WORKER_POOL_SIZE={opts["async_pool"]}')
@@ -248,8 +255,15 @@ class NapiModule(ExtensionModule):
             kwargs['name_suffix'] = name_suffix_native
 
         napi_dir = self.relativize(self.napi_dir / 'include' / 'node', source_dir)
-        node_addon_api_dir = self.relativize(str(Path(node.source_root) / 'node_modules' / 'node-addon-api'), source_dir)
-        kwargs.setdefault('include_directories', []).extend([str(napi_dir), str(node_addon_api_dir)])
+
+        if 'cpp' in self.interpreter.environment.coredata.compilers.host:
+            self.load_node_addon_api_package()
+            inc_dir = self.node_addon_api_package['include'].strip('\"')
+            node_addon_api_dir = self.relativize(inc_dir, source_dir)
+            kwargs.setdefault('include_directories', []).extend([str(node_addon_api_dir)])
+            print('node_addon_api_dir', node_addon_api_dir, source_dir)
+
+        kwargs.setdefault('include_directories', []).extend([str(napi_dir)])
 
         return self.interpreter.build_target(node, args, kwargs, SharedModule)
 
