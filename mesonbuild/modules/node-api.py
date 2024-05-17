@@ -58,6 +58,27 @@ node_api_defaults: NodeAPIOptions = {
 }
 _NODE_API_OPTS_KW = KwargInfo('node_api_options', dict, default=node_api_defaults)
 
+swig_cpp_defaults_shared = [
+    '-Wno-deprecated-declarations',
+    '-Wno-unused-function',
+    '-Wno-type-limits',
+    '-Wno-deprecated-copy',
+    '-Wno-attributes'
+]
+swig_cpp_defaults_clang = swig_cpp_defaults_shared + [
+    '-Wno-deprecated-declarations',
+    '-Wno-unused-function',
+    '-Wno-type-limits',
+    '-Wno-deprecated-copy',
+    '-Wno-attributes'
+]
+swig_cpp_defaults = {
+    'gcc': swig_cpp_defaults_shared + [ '-Wno-maybe-uninitialized' ],
+    'clang': swig_cpp_defaults_clang,
+    'msvc': ['/wo6246', '/wo28182'],
+    'emscripten': swig_cpp_defaults_clang
+}
+
 if T.TYPE_CHECKING:
     class ExtensionModuleKw(SharedModuleKw):
         options: NodeAPIOptions
@@ -112,13 +133,20 @@ class NapiModule(ExtensionModule):
         if self.emnapi_package is None:
             self.emnapi_package = self.parse_node_json_output('require("emnapi")')
 
+    def construct_swig_options(self, opts: NodeAPIOptions) -> T.List[str]:
+        if opts['swig']:
+            cpp_id = self.interpreter.environment.coredata.compilers.host['cpp'].id
+            if cpp_id in swig_cpp_defaults:
+                return swig_cpp_defaults[cpp_id]
+        return []
+
     def construct_native_options(self, name:str, opts: NodeAPIOptions) -> T.Tuple[T.List[str], T.List[str], T.List[str]]:
-        return [], [], []
+        return [], self.construct_swig_options(opts), []
 
     # As these options are mandatory in order to build an emnapi WASM module, they are hardcoded here
     def construct_emscripten_options(self, name: str, opts: NodeAPIOptions) -> T.Tuple[T.List[str], T.List[str], T.List[str]]:
         c_args = []
-        cpp_args = []
+        cpp_args = self.construct_swig_options(opts)
         link_args = ['-Wno-emcc', '-Wno-pthreads-mem-growth', '-sALLOW_MEMORY_GROWTH=1',
                      '-sEXPORTED_FUNCTIONS=["_malloc","_free","_napi_register_wasm_v1","_node_api_module_get_api_version_v1"]',
                      '--bind', f'-sSTACK_SIZE={opts["stack"]}' ]
@@ -233,6 +261,8 @@ class NapiModule(ExtensionModule):
         kwargs['name_prefix'] = name_prefix
         source_dir = self.source_root / node.subdir
         kwargs.setdefault('install_dir', [''])
+
+        cons_args = None
         opts = {**node_api_defaults, **kwargs['node_api_options']}
         if self.interpreter.environment.machines.host.system == 'emscripten':
             # emscripten WASM mode
@@ -240,13 +270,10 @@ class NapiModule(ExtensionModule):
                 raise mesonlib.MesonException('Node-API requires C to be enabled for WASM mode')
 
             kwargs['name_suffix'] = name_suffix_wasm_es6 if opts['es6'] else name_suffix_wasm_cjs
-            extra_c_args, extra_cpp_args, extra_link_args = self.construct_emscripten_options(args[0], opts)
-            kwargs.setdefault('link_args', []).extend(extra_link_args)
-            kwargs.setdefault('c_args', []).extend(extra_c_args)
-            kwargs.setdefault('cpp_args', []).extend(extra_cpp_args)
+            cons_args = self.construct_emscripten_options
 
             js_lib = self.emnapi_js_library(source_dir)
-            kwargs['link_args'].append(f'--js-library={js_lib}')
+            kwargs.setdefault('link_args', []).append(f'--js-library={js_lib}')
 
             inc_dirs = self.emnapi_include_dirs(source_dir)
             kwargs['include_directories'] += [str(d) for d in inc_dirs]
@@ -257,10 +284,16 @@ class NapiModule(ExtensionModule):
         else:
             # Node.js native mode
             kwargs['name_suffix'] = name_suffix_native
+            cons_args = self.construct_native_options
 
             if self.napi_lib:
                 napi_lib = self.relativize(self.napi_lib, source_dir)
                 kwargs.setdefault('objects', []).extend([str(napi_lib)])
+
+        extra_c_args, extra_cpp_args, extra_link_args = cons_args(args[0], opts)
+        kwargs.setdefault('link_args', []).extend(extra_link_args)
+        kwargs.setdefault('c_args', []).extend(extra_c_args)
+        kwargs.setdefault('cpp_args', []).extend(extra_cpp_args)
 
         if 'cpp' in self.interpreter.environment.coredata.compilers.host:
             self.load_node_addon_api_package()
@@ -272,7 +305,6 @@ class NapiModule(ExtensionModule):
             cpp_std_key = mesonlib.OptionKey('std', lang='cpp')
             if cpp_std_key not in kwargs['override_options']:
                 kwargs['override_options'][cpp_std_key] = 'c++17'
-            print(kwargs['override_options'])
 
         if self.napi_includes:
             napi_includes = self.relativize(self.napi_includes, source_dir)
