@@ -7,13 +7,11 @@ from __future__ import annotations
 import json, subprocess, os, sys, tarfile, io
 import urllib.request, urllib.error, urllib.parse
 from pathlib import Path
-from enum import Enum
 import typing as T
 
-from . import ExtensionModule, ModuleInfo, ModuleObject
+from . import ExtensionModule, ModuleInfo
 from .. import mesonlib
 from .. import mlog
-from .. import mparser
 from ..build import known_shmod_kwargs, CustomTarget, CustomTargetIndex, BuildTarget, GeneratedList, StructuredSources, ExtractedObjects, SharedModule
 from ..programs import ExternalProgram
 from ..interpreter.type_checking import SHARED_MOD_KWS, TEST_KWS
@@ -22,9 +20,9 @@ from ..interpreterbase import (
 )
 
 if T.TYPE_CHECKING:
+    from . import ModuleState
     from ..interpreter import Interpreter
     from ..interpreter.kwargs import SharedModule as SharedModuleKw, FuncTest as FuncTestKw
-    from ..interpreterbase import TYPE_kwargs, TYPE_var
     from typing import Any
 
     SourcesVarargsType = T.List[T.Union[str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget]]
@@ -34,7 +32,7 @@ name_suffix_native = 'node'
 name_suffix_wasm_es6 = 'mjs'
 name_suffix_wasm_cjs = 'js'
 
-mod_kwargs = { 'node_api_options' }
+mod_kwargs = {'node_api_options'}
 mod_kwargs.update(known_shmod_kwargs)
 mod_kwargs -= {'name_prefix', 'name_suffix'}
 
@@ -43,10 +41,9 @@ _MOD_KWARGS = [k for k in SHARED_MOD_KWS if k.name not in {'name_prefix', 'name_
 class NodeAPIOptions(T.TypedDict):
     async_pool:     int
     es6:            bool
-    fs:             bool
     stack:          str
     swig:           bool
-    environments:   T.Set[str]
+    environments:   T.List[str]
 
 # These are the defauls
 node_api_defaults: NodeAPIOptions = {
@@ -73,7 +70,7 @@ swig_cpp_defaults_clang = swig_cpp_defaults_shared + [
     '-Wno-attributes'
 ]
 swig_cpp_defaults = {
-    'gcc': swig_cpp_defaults_shared + [ '-Wno-maybe-uninitialized' ],
+    'gcc': swig_cpp_defaults_shared + ['-Wno-maybe-uninitialized'],
     'clang': swig_cpp_defaults_clang,
     'msvc': ['/wo6246', '/wo28182'],
     'emscripten': swig_cpp_defaults_clang
@@ -81,7 +78,10 @@ swig_cpp_defaults = {
 
 if T.TYPE_CHECKING:
     class ExtensionModuleKw(SharedModuleKw):
-        options: NodeAPIOptions
+        node_api_options: NodeAPIOptions
+        # These are missing from the base type
+        install_dir: str
+        link_args: T.List[str]
 
 def tar_strip1(files: T.List[tarfile.TarInfo]) -> T.Generator[tarfile.TarInfo, None, None]:
     for member in files:
@@ -140,7 +140,7 @@ class NapiModule(ExtensionModule):
                 return swig_cpp_defaults[cpp_id]
         return []
 
-    def construct_native_options(self, name:str, opts: NodeAPIOptions) -> T.Tuple[T.List[str], T.List[str], T.List[str]]:
+    def construct_native_options(self, name: str, opts: NodeAPIOptions) -> T.Tuple[T.List[str], T.List[str], T.List[str]]:
         return [], self.construct_swig_options(opts), []
 
     # As these options are mandatory in order to build an emnapi WASM module, they are hardcoded here
@@ -149,7 +149,7 @@ class NapiModule(ExtensionModule):
         cpp_args = self.construct_swig_options(opts)
         link_args = ['-Wno-emcc', '-Wno-pthreads-mem-growth', '-sALLOW_MEMORY_GROWTH=1',
                      '-sEXPORTED_FUNCTIONS=["_malloc","_free","_napi_register_wasm_v1","_node_api_module_get_api_version_v1"]',
-                     '--bind', f'-sSTACK_SIZE={opts["stack"]}' ]
+                     '--bind', f'-sSTACK_SIZE={opts["stack"]}']
 
         if opts['es6']:
             link_args.extend(['-sMODULARIZE', '-sEXPORT_ES6=1', f'-sEXPORT_NAME={name}'])
@@ -255,15 +255,15 @@ class NapiModule(ExtensionModule):
     @typed_pos_args('node-api.extension_module', str, varargs=(str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget))
     # TODO: For some strange reason, install_dir requires allow_unknown=True
     @typed_kwargs('node-api.extension_module', *_MOD_KWARGS, _NODE_API_OPTS_KW, allow_unknown=True)
-    def extension_module_method(self, node: mparser.BaseNode, args: T.Tuple[str, SourcesVarargsType], kwargs: ExtensionModuleKw) -> 'SharedModule':
+    def extension_module_method(self, state: 'ModuleState', args: T.Tuple[str, SourcesVarargsType], kwargs: ExtensionModuleKw) -> 'SharedModule':
         if 'include_directories' not in kwargs:
             kwargs['include_directories'] = []
         kwargs['name_prefix'] = name_prefix
-        source_dir = self.source_root / node.subdir
-        kwargs.setdefault('install_dir', [''])
+        source_dir = self.source_root / state.subdir
+        kwargs.setdefault('install_dir', '')
 
         cons_args = None
-        opts = {**node_api_defaults, **kwargs['node_api_options']}
+        opts = T.cast('NodeAPIOptions', {**node_api_defaults, **kwargs['node_api_options']})
         if self.interpreter.environment.machines.host.system == 'emscripten':
             # emscripten WASM mode
             if 'c' not in self.interpreter.environment.get_coredata().compilers.host:
@@ -310,11 +310,11 @@ class NapiModule(ExtensionModule):
             napi_includes = self.relativize(self.napi_includes, source_dir)
             kwargs.setdefault('include_directories', []).extend([str(napi_includes)])
 
-        return self.interpreter.build_target(node, args, kwargs, SharedModule)
+        return self.interpreter.build_target(state.current_node, args, kwargs, SharedModule)
 
     @typed_pos_args('node_api_extension.test', str, (str, mesonlib.File), (SharedModule, mesonlib.File))
     @typed_kwargs('node_api_extenstion.test', *TEST_KWS, KwargInfo('is_parallel', bool, default=True))
-    def test_method(self, node: mparser.BaseNode,
+    def test_method(self, state: 'ModuleState',
                     args: T.Tuple[
                         str,
                         T.Union[str, mesonlib.File],
@@ -330,7 +330,7 @@ class NapiModule(ExtensionModule):
         if isinstance(script, mesonlib.File):
             node_script = script
         else:
-            node_script = mesonlib.File(False, node.subdir, script)
+            node_script = mesonlib.File(False, state.subdir, script)
 
         node_env = kwargs.setdefault('env', mesonlib.EnvironmentVariables())
         node_addon: T.Union[SharedModule, mesonlib.File] = None
@@ -350,7 +350,7 @@ class NapiModule(ExtensionModule):
 
         kwargs.setdefault('args', []).insert(0, node_script)
 
-        self.interpreter.add_test(node, (test_name, ExternalProgram('node')), T.cast('T.Dict[str, Any]', kwargs), True)
+        self.interpreter.add_test(state.current_node, (test_name, ExternalProgram('node')), T.cast('T.Dict[str, Any]', kwargs), True)
 
 def initialize(interpreter: 'Interpreter') -> NapiModule:
     mod = NapiModule(interpreter)
