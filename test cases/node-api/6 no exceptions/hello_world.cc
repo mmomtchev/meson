@@ -5,7 +5,11 @@
 using namespace Napi;
 
 #if defined(NAPI_CPP_EXCEPTIONS) || defined(_CPPUNWIND) || defined(__EXCEPTIONS)
-#error must compile without C++ exceptions
+#error "Must compile without C++ exceptions"
+#endif
+
+#if __cplusplus < 201803L
+#  error "Must compile in C++20 mode"
 #endif
 
 Napi::String Method(const Napi::CallbackInfo &info) {

@@ -12,6 +12,7 @@ addon = napi.extension_module(
   'hello_world',
   [ 'hello_world.cc' ],
   install: true,
+  override_options: [ 'cpp_std=c++20' ]
   )
 
 if host_machine.system() == 'emscripten'

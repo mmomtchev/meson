@@ -270,6 +270,12 @@ class NapiModule(ExtensionModule):
             inc_dir = self.node_addon_api_package['include'].strip('\"')
             node_addon_api_dir = self.relativize(inc_dir, source_dir)
             kwargs.setdefault('include_directories', []).extend([str(node_addon_api_dir)])
+            kwargs.setdefault('override_options', {})
+            # The default C++ standard when using node-addon-api should be C++17
+            cpp_std_key = mesonlib.OptionKey('std', lang='cpp')
+            if cpp_std_key not in kwargs['override_options']:
+                kwargs['override_options'][cpp_std_key] = 'c++17'
+            print(kwargs['override_options'])
 
         if self.napi_includes:
             napi_includes = self.relativize(self.napi_includes, source_dir)
