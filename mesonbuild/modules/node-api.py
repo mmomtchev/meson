@@ -83,6 +83,8 @@ class NapiModule(ExtensionModule):
         self.node_addon_api_package: Any = None
         self.emnapi_package: Any = None
         self.napi_dir: Path = None
+        self.napi_includes: Path = None
+        self.napi_lib: Path = None
         self.source_root: Path = Path(interpreter.environment.get_source_dir())
         self.load_node_process()
         self.download_headers()
@@ -183,8 +185,11 @@ class NapiModule(ExtensionModule):
     def download_headers(self) -> None:
         if 'headersUrl' in self.node_process['release']:
             self.download_item(self.node_process['release']['headersUrl'], self.napi_dir)
+            self.napi_includes = self.napi_dir / 'include' / 'node'
         if 'libUrl' in self.node_process['release']:
-            self.download_item(self.node_process['release']['libUrl'], self.napi_dir)
+            url = self.node_process['release']['libUrl']
+            self.download_item(url, self.napi_dir)
+            self.napi_lib = self.napi_dir / os.path.basename(urllib.parse.urlparse(url).path)
 
         mlog.log('Node.js library distribution: ', mlog.bold(str(self.napi_dir)))
 
@@ -256,16 +261,19 @@ class NapiModule(ExtensionModule):
             # Node.js native mode
             kwargs['name_suffix'] = name_suffix_native
 
-        napi_dir = self.relativize(self.napi_dir / 'include' / 'node', source_dir)
+            if self.napi_lib:
+                napi_lib = self.relativize(self.napi_lib, source_dir)
+                kwargs.setdefault('objects', []).extend([str(napi_lib)])
 
         if 'cpp' in self.interpreter.environment.coredata.compilers.host:
             self.load_node_addon_api_package()
             inc_dir = self.node_addon_api_package['include'].strip('\"')
             node_addon_api_dir = self.relativize(inc_dir, source_dir)
             kwargs.setdefault('include_directories', []).extend([str(node_addon_api_dir)])
-            print('node_addon_api_dir', node_addon_api_dir, source_dir)
 
-        kwargs.setdefault('include_directories', []).extend([str(napi_dir)])
+        if self.napi_includes:
+            napi_includes = self.relativize(self.napi_includes, source_dir)
+            kwargs.setdefault('include_directories', []).extend([str(napi_includes)])
 
         return self.interpreter.build_target(node, args, kwargs, SharedModule)
 
