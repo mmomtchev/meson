@@ -111,7 +111,7 @@ addon = napi.extension_module(
     'es6':              true,
     'stack':            '2MB',
     'swig':             false,
-    'environments':     { 'node', 'web', 'webview', 'worker' }
+    'environments':     [ 'node', 'web', 'webview', 'worker' ]
   })
 ```
 
@@ -119,7 +119,7 @@ addon = napi.extension_module(
 * `es6`: (*applies only to WASM*) determines if `emscripten` will produce a CJS or ES6 WASM loader
 * `stack`: (*applies only to WASM*) the maximum stack size, WASM cannot grow its stack
 * `swig`: disables a number of warnings on the four major supported compilers (`gcc`, `clang`, `MSVC` and `emscripten`) specific to the generated C++ code by SWIG
-* `environments`: (*applies only to WASM*) determines the list of supported environments by the `emscripten` WASM loader, in particular, disabling `node` will produce a loader that works cleanly and without any warnings with most bundlers such as `webpack`
+* `environments`: (*applies only to WASM*) determines the list of supported environments by the `emscripten` WASM loader, in particular, omitting `node` will produce a loader that works cleanly and without any warnings with most bundlers such as `webpack`, but does not work in Node.js
 
 # Why fork `meson`
 
