@@ -67,7 +67,8 @@ swig_cpp_defaults_clang = swig_cpp_defaults_shared + [
     '-Wno-unused-function',
     '-Wno-type-limits',
     '-Wno-deprecated-copy',
-    '-Wno-attributes'
+    '-Wno-attributes',
+    '-Wno-sometimes-uninitialized'
 ]
 swig_cpp_defaults = {
     'gcc': swig_cpp_defaults_shared + ['-Wno-maybe-uninitialized'],
