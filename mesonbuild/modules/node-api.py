@@ -40,19 +40,13 @@ mod_kwargs -= {'name_prefix', 'name_suffix'}
 
 _MOD_KWARGS = [k for k in SHARED_MOD_KWS if k.name not in {'name_prefix', 'name_suffix'}]
 
-class NodeAPIEnv(Enum):
-    node    = 'node'
-    web     = 'web'
-    webview = 'webview'
-    worker  = 'worker'
-
 class NodeAPIOptions(T.TypedDict):
     async_pool:     int
     es6:            bool
     fs:             bool
     stack:          str
     swig:           bool
-    environments:   T.Set[NodeAPIEnv]
+    environments:   T.Set[str]
 
 # These are the defauls
 node_api_defaults: NodeAPIOptions = {
@@ -60,7 +54,7 @@ node_api_defaults: NodeAPIOptions = {
     'es6':              True,
     'stack':            '2MB',
     'swig':             False,
-    'environments':     { NodeAPIEnv.node, NodeAPIEnv.web, NodeAPIEnv.webview, NodeAPIEnv.worker }
+    'environments':     ['node', 'web', 'webview', 'worker']
 }
 _NODE_API_OPTS_KW = KwargInfo('node_api_options', dict, default=node_api_defaults)
 
@@ -149,7 +143,10 @@ class NapiModule(ExtensionModule):
 
         env = '-sENVIRONMENT='
         for e in opts['environments']:
-            env += f'{e.value},'
+            if e in node_api_defaults['environments']:
+                env += f'{e},'
+            else:
+                mlog.warning(f'Ignoring invalid environments {e}')
         link_args.append(env)
 
         return c_args, cpp_args, link_args
