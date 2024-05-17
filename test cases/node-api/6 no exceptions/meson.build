@@ -1,6 +1,7 @@
 project(
   'Hello World for meson',
-  ['c', 'cpp']
+  ['c', 'cpp'],
+  default_options: ['buildtype=release']
 )
 
 napi = import('node-api')

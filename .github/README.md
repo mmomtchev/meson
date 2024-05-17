@@ -24,9 +24,12 @@ pip install git+https://github.com/mmomtchev/meson@main
 
 A quickstart by example:
 
-```meson
+```python
 project(
   'Hello World for meson',
+  # Not mandatory, but this is the default when using node-gyp
+  # (in meson, the default is buildtype=debug)
+  default_options: ['buildtype=release'],
   ['c', 'cpp']
 )
 
@@ -36,8 +39,12 @@ napi = import('node-api')
 # Use napi.extension_module() instead of
 # shared_module() with the same arguments
 addon = napi.extension_module(
+  # The name of the addon
   'example_addon',
+  # The sources
   [ 'src/example_main.cc' ],
+  # Will install to the location specified by -Dprefix=...
+  # (usually ./lib/binding/{platform}-{arch})
   install: true
   )
 
@@ -57,7 +64,7 @@ The default build is the native build.
 
 In order to build to WASM, `emscripten` must be installed and activated in the environment. The bare minimum for the `meson` `cross-file` is:
 
-```
+```ini
 [binaries]
 c = 'emcc'
 cpp = 'em++'
@@ -71,12 +78,14 @@ cpu = 'wasm32'
 endian = 'little'
 ```
 
+Pass this file with `--cross-file wasm.txt` when configuring the project.
+
 If building C++ with `node-addon-api`, it must be installed and available with a `require('node-addon-api')`.
 
 If building to WASM, `emnapi` must be installed and available with a `require('emnapi')` and `C` must be enabled as language.
 
 If building to WASM with async support, multi-threading must be explicitly enabled:
-```
+```python
 thread_dep = dependency('threads')
 addon = napi.extension_module(
   'example_addon',
@@ -93,7 +102,7 @@ Node.js always has async support and included the `thread` dependency is a no-op
 
 The module supports a number of Node-API specific options (these are the default values):
 
-```
+```python
 addon = napi.extension_module(
   'example_addon',
   [ 'src/example_main.cc' ],
