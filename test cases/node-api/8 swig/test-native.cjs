@@ -24,3 +24,17 @@ addon.calcAsync(pi).then((r) => {
 addon.piAsync(pi).then((r) => {
   assert.closeTo(r, Math.PI, 1e-5);
 });
+
+// Exception handling
+assert.throws(() => {
+  addon.calcSync('invalid');
+});
+
+let fail = false;
+addon.calcAsync('invalid')
+  .catch(() => {
+    fail = true;
+  })
+  .tehn(() => {
+    if (!fail) throw new Error();
+  });

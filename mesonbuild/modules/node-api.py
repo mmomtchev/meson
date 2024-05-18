@@ -161,6 +161,7 @@ class NapiModule(ExtensionModule):
             cpp_thread_count = self.interpreter.environment.coredata.options[mesonlib.OptionKey('thread_count', lang='cpp')].value
             exceptions = self.interpreter.environment.coredata.options[mesonlib.OptionKey('eh', lang='cpp')].value != 'none'
             if exceptions:
+                cpp_args.append('-sNO_DISABLE_EXCEPTION_CATCHING')
                 link_args.append('-sNO_DISABLE_EXCEPTION_CATCHING')
             if not exceptions and opts['swig']:
                 raise mesonlib.MesonException('SWIG-JSE requires C++ exceptions')
