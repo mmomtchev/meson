@@ -31,5 +31,12 @@ import(path.resolve(env.NODE_PATH, env.NODE_ADDON))
     addon.piAsync(pi).then((r) => {
       assert.closeTo(r, Math.PI, 1e-5);
     });
+
+    // The Node.js convention calls for a Promise rejection here
+    // However SWIG-generated code throws a synchronous exception
+    // This an open issue in SWIG JSE: https://github.com/mmomtchev/swig/issues/54
+    assert.throws(() => {
+      addon.calcAsync('invalid');
+    });
   });
 

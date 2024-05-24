@@ -30,11 +30,9 @@ assert.throws(() => {
   addon.calcSync('invalid');
 });
 
-let fail = false;
-addon.calcAsync('invalid')
-  .catch(() => {
-    fail = true;
-  })
-  .tehn(() => {
-    if (!fail) throw new Error();
-  });
+// The Node.js convention calls for a Promise rejection here
+// However SWIG-generated code throws a synchronous exception
+// This an open issue in SWIG JSE: https://github.com/mmomtchev/swig/issues/54
+assert.throws(() => {
+  addon.calcAsync('invalid');
+});
