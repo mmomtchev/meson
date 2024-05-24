@@ -8,7 +8,6 @@ import json, subprocess, os, sys, tarfile, io
 import urllib.request, urllib.error, urllib.parse
 from pathlib import Path
 import typing as T
-from typing_extensions import TypedDict
 
 from . import ExtensionModule, ModuleInfo
 from .. import mesonlib
@@ -25,8 +24,16 @@ if T.TYPE_CHECKING:
     from ..interpreter import Interpreter
     from ..interpreter.kwargs import SharedModule as SharedModuleKw, FuncTest as FuncTestKw
     from typing import Any
+    from typing_extensions import TypedDict
 
     SourcesVarargsType = T.List[T.Union[str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget]]
+
+    class NodeAPIOptions(TypedDict):
+        async_pool:     int
+        es6:            bool
+        stack:          str
+        swig:           bool
+        environments:   T.List[str]
 
 name_prefix = ''
 name_suffix_native = 'node'
@@ -39,15 +46,8 @@ mod_kwargs -= {'name_prefix', 'name_suffix'}
 
 _MOD_KWARGS = [k for k in SHARED_MOD_KWS if k.name not in {'name_prefix', 'name_suffix'}]
 
-class NodeAPIOptions(TypedDict):
-    async_pool:     int
-    es6:            bool
-    stack:          str
-    swig:           bool
-    environments:   T.List[str]
-
 # These are the defauls
-node_api_defaults: NodeAPIOptions = {
+node_api_defaults: 'NodeAPIOptions' = {
     'async_pool':       4,
     'es6':              True,
     'stack':            '2MB',
@@ -80,7 +80,7 @@ swig_cpp_defaults = {
 
 if T.TYPE_CHECKING:
     class ExtensionModuleKw(SharedModuleKw):
-        node_api_options: NodeAPIOptions
+        node_api_options: 'NodeAPIOptions'
         # These are missing from the base type
         install_dir: str
         link_args: T.List[str]
@@ -135,18 +135,18 @@ class NapiModule(ExtensionModule):
         if self.emnapi_package is None:
             self.emnapi_package = self.parse_node_json_output('require("emnapi")')
 
-    def construct_swig_options(self, opts: NodeAPIOptions) -> T.List[str]:
+    def construct_swig_options(self, opts: 'NodeAPIOptions') -> T.List[str]:
         if opts['swig']:
             cpp_id = self.interpreter.environment.coredata.compilers.host['cpp'].id
             if cpp_id in swig_cpp_defaults:
                 return swig_cpp_defaults[cpp_id]
         return []
 
-    def construct_native_options(self, name: str, opts: NodeAPIOptions) -> T.Tuple[T.List[str], T.List[str], T.List[str]]:
+    def construct_native_options(self, name: str, opts: 'NodeAPIOptions') -> T.Tuple[T.List[str], T.List[str], T.List[str]]:
         return [], self.construct_swig_options(opts), []
 
     # As these options are mandatory in order to build an emnapi WASM module, they are hardcoded here
-    def construct_emscripten_options(self, name: str, opts: NodeAPIOptions) -> T.Tuple[T.List[str], T.List[str], T.List[str]]:
+    def construct_emscripten_options(self, name: str, opts: 'NodeAPIOptions') -> T.Tuple[T.List[str], T.List[str], T.List[str]]:
         c_args = []
         cpp_args = self.construct_swig_options(opts)
         link_args = ['-Wno-emcc', '-Wno-pthreads-mem-growth', '-sALLOW_MEMORY_GROWTH=1',
