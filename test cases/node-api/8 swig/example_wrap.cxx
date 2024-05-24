@@ -167,7 +167,7 @@
 # define SWIG_NULLPTR nullptr
 #else
 # define SWIG_NULLPTR NULL
-#endif 
+#endif
 
 /* -----------------------------------------------------------------------------
  * swigcompat.swg
@@ -199,9 +199,9 @@
 
 
 
-#define SWIG_exception_fail(code, msg) do { SWIG_Error(code, msg); SWIG_fail; } while(0) 
+#define SWIG_exception_fail(code, msg) do { SWIG_Error(code, msg); SWIG_fail; } while(0)
 
-#define SWIG_contract_assert(expr, msg) do { if (!(expr)) { SWIG_Error(SWIG_RuntimeError, msg); SWIG_fail; } } while (0) 
+#define SWIG_contract_assert(expr, msg) do { if (!(expr)) { SWIG_Error(SWIG_RuntimeError, msg); SWIG_fail; } } while (0)
 
 
 
@@ -332,7 +332,7 @@
       // success code
       if (SWIG_IsNewObj(res) {
         ...
-	delete *ptr;
+  delete *ptr;
       } else {
         ...
       }
@@ -476,7 +476,7 @@ typedef struct swig_module_info {
 */
 SWIGRUNTIME int
 SWIG_TypeNameComp(const char *f1, const char *l1,
-		  const char *f2, const char *l2);
+      const char *f2, const char *l2);
 /*
   Check type equivalence in a name list like <name1>|<name2>|...
   Return 0 if equal, -1 if nb < tb, 1 if nb > tb
@@ -550,7 +550,7 @@ SWIG_TypeNewClientData(swig_type_info *ti, void *clientdata);
 SWIGRUNTIME swig_type_info *
 SWIG_MangledTypeQueryModule(swig_module_info *start,
                             swig_module_info *end,
-		            const char *name);
+                const char *name);
 
 /*
   Search for a swig_type_info structure for either a mangled name or a human readable name.
@@ -564,7 +564,7 @@ SWIG_MangledTypeQueryModule(swig_module_info *start,
 SWIGRUNTIME swig_type_info *
 SWIG_TypeQueryModule(swig_module_info *start,
                      swig_module_info *end,
-		     const char *name);
+         const char *name);
 /*
    Pack binary data into a string
 */
@@ -769,7 +769,7 @@ class SWIG_NAPI_ObjectWrap_templ : public Napi::ObjectWrap<SWIG_OBJ_WRAP> {
     bool owned;
     size_t size;
     swig_type_info *info;
-    std::function<void()> *finalizer; 
+    std::function<void()> *finalizer;
     SWIG_NAPI_ObjectWrap_templ(const Napi::CallbackInfo &info);
     SWIG_NAPI_ObjectWrap_templ(bool, const Napi::CallbackInfo &info) :
         Napi::ObjectWrap<SWIG_OBJ_WRAP>(info),
@@ -799,7 +799,7 @@ class SWIG_NAPI_ObjectWrap_templ : public Napi::ObjectWrap<SWIG_OBJ_WRAP> {
 
 template <typename SWIG_OBJ_WRAP>
 SWIG_NAPI_ObjectWrap_templ<SWIG_OBJ_WRAP>::SWIG_NAPI_ObjectWrap_templ(const Napi::CallbackInfo &info) :
-        Napi::ObjectWrap<SWIG_OBJ_WRAP>(info), size(0), info(SWIG_NULLPTR), finalizer(SWIG_NULLPTR), _lock() { 
+        Napi::ObjectWrap<SWIG_OBJ_WRAP>(info), size(0), info(SWIG_NULLPTR), finalizer(SWIG_NULLPTR), _lock() {
   Napi::Env env = info.Env();
   if (info.Length() == 1 && info[0].IsExternal()) {
     // This constructor has been called internally from C++/SWIG
@@ -919,11 +919,11 @@ public:
 
 /*
  * SwigValueInit() is a generic initialisation solution as the following approach:
- * 
+ *
  *       T c_result = T();
- * 
+ *
  * doesn't compile for all types for example:
- * 
+ *
  *       unsigned int c_result = unsigned int();
  */
 template <typename T> T SwigValueInit() {
@@ -939,8 +939,8 @@ template <typename T> T SwigValueInit() {
 #endif
 
 
-#define SWIG_as_voidptr(a) const_cast< void * >(static_cast< const void * >(a)) 
-#define SWIG_as_voidptrptr(a) ((void)SWIG_as_voidptr(*a),reinterpret_cast< void** >(a)) 
+#define SWIG_as_voidptr(a) const_cast< void * >(static_cast< const void * >(a))
+#define SWIG_as_voidptrptr(a) ((void)SWIG_as_voidptr(*a),reinterpret_cast< void** >(a))
 
 
 #define SWIG_FromCharPtrAndSize(cptr, size) SWIG_Env_FromCharPtrAndSize(env, cptr, size)
@@ -1100,7 +1100,7 @@ template <typename SWIG_OBJ_WRAP>
 _exports_Pi_templ<SWIG_OBJ_WRAP>::_exports_Pi_templ(const Napi::CallbackInfo &info)
 :SWIG_NAPI_ObjectWrap_templ<SWIG_OBJ_WRAP>(true, info) {
   Napi::Env env = info.Env();
-  
+
   this->info = SWIGTYPE_p_Pi;
   if (info.Length() == 1 && info[0].IsExternal()) {
     // This constructor has been called internally from C++/SWIG
@@ -1110,7 +1110,7 @@ _exports_Pi_templ<SWIG_OBJ_WRAP>::_exports_Pi_templ(const Napi::CallbackInfo &in
     return;
   }
   this->owned = true;
-  
+
   int arg1 ;
   int val1 ;
   int ecode1 = 0 ;
@@ -1124,12 +1124,12 @@ _exports_Pi_templ<SWIG_OBJ_WRAP>::_exports_Pi_templ(const Napi::CallbackInfo &in
     ecode1 = SWIG_AsVal_int(info[0], &val1);
     if (!SWIG_IsOK(ecode1)) {
       SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_Pi" "', argument " "1"" of type '" "int""'");
-    } 
+    }
     arg1 = static_cast< int >(val1);result = (Pi *)new Pi(arg1);
-    
-    
+
+
     this->self = result;
-    
+
     return;
 #ifdef NAPI_CPP_EXCEPTIONS
   } catch (...) {
@@ -1137,7 +1137,7 @@ _exports_Pi_templ<SWIG_OBJ_WRAP>::_exports_Pi_templ(const Napi::CallbackInfo &in
   }
 #else
 fail:
-  
+
   return;
 #endif
 }
@@ -1146,7 +1146,7 @@ fail:
 template <typename SWIG_OBJ_WRAP>
 _exports_Pi_templ<SWIG_OBJ_WRAP>::_exports_Pi_templ(bool, const Napi::CallbackInfo &info)
 :SWIG_NAPI_ObjectWrap_templ<SWIG_OBJ_WRAP>(true, info) {
-  
+
 }
 
 
@@ -1160,41 +1160,41 @@ Napi::Value _exports_Pi_templ<SWIG_OBJ_WRAP>::_wrap_Pi_approxAsync(const Napi::C
     void *argp1 = 0 ;
     int res1 = 0 ;
     double result;
-    
+
   public:
     _exports_Pi__wrap_Pi_approxAsync_Tasklet(Napi::Env _env)
     :SWIG_NAPI_AsyncContext(_env), env(_env) {
-      
+
     }
-    
+
     virtual void SWIG_NAPI_Execute() override {
       // This runs the action code in a worker thread and V8 is not accessible
       Napi::Env env(SWIG_NULLPTR);
-      
-      
-      
+
+
+
       result = (double)(arg1)->approx();
-      
+
       goto fail;
     fail:
       return;
     }
-    
+
 #ifdef NAPI_CPP_EXCEPTIONS
     virtual void SWIG_NAPI_Rethrow(const std::exception_ptr &saved) override {
       // Back in the main thread with V8 access, caller has HandleScope
-      
+
       if (saved) std::rethrow_exception(saved);
-      
-      
+
+
     }
 #endif
-    
+
     virtual void SWIG_NAPI_Resolve() override {
       // Back in the main thread with V8 access, caller has HandleScope
       Napi::Value jsresult;
       jsresult = SWIG_From_double  SWIG_NAPI_FROM_CALL_ARGS(static_cast< double >(result));
-      
+
       if (!SWIG_NAPI_Cleanup()) goto fail;
       SWIG_NAPI_deferred_finalized = true;
       SWIG_NAPI_deferred.Resolve(jsresult);
@@ -1202,25 +1202,25 @@ Napi::Value _exports_Pi_templ<SWIG_OBJ_WRAP>::_wrap_Pi_approxAsync(const Napi::C
     fail:
       return;
     }
-    
+
     virtual bool SWIG_NAPI_Cleanup() override {
       return true;
       goto fail;
     fail:
       return false;
     }
-    
+
     virtual SWIG_NAPI_Status SWIG_NAPI_Init(const Napi::CallbackInfo &info) override {
 #ifdef NAPI_CPP_EXCEPTIONS
       try {
 #endif
         res1 = SWIG_ConvertPtr(info.This(), &argp1,SWIGTYPE_p_Pi, 0 |  0 );
         if (!SWIG_IsOK(res1)) {
-          SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Pi_approx" "', argument " "1"" of type '" "Pi *""'"); 
+          SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Pi_approx" "', argument " "1"" of type '" "Pi *""'");
         }
         arg1 = reinterpret_cast< Pi * >(argp1);
 #define SWIG_NAPI_Raise SWIG_NAPI_Reject
-        
+
 #undef SWIG_NAPI_Raise
         return SWIG_NAPI_Status::OK;
 #ifdef NAPI_CPP_EXCEPTIONS
@@ -1235,7 +1235,7 @@ Napi::Value _exports_Pi_templ<SWIG_OBJ_WRAP>::_wrap_Pi_approxAsync(const Napi::C
       return SWIG_NAPI_Status::THROW;
     }
   };
-  
+
   Napi::Env env = info.Env();
   _exports_Pi__wrap_Pi_approxAsync_Tasklet *context = SWIG_NULLPTR;
   SWIG_NAPI_AsyncWorker *worker = SWIG_NULLPTR;
@@ -1263,32 +1263,32 @@ Napi::Value _exports_Pi_templ<SWIG_OBJ_WRAP>::_wrap_Pi_approxSync(const Napi::Ca
   void *argp1 = 0 ;
   int res1 = 0 ;
   double result;
-  
-  
+
+
 #ifdef NAPI_CPP_EXCEPTIONS
   try {
 #endif
-    
+
     if(static_cast<int>(info.Length()) < 0 || static_cast<int>(info.Length()) > 0) {
       SWIG_Error(SWIG_ERROR, "Illegal number of arguments for _wrap_Pi_approxSync.");
     }
-    
+
     res1 = SWIG_ConvertPtr(info.This(), &argp1,SWIGTYPE_p_Pi, 0 |  0 );
     if (!SWIG_IsOK(res1)) {
-      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Pi_approx" "', argument " "1"" of type '" "Pi *""'"); 
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Pi_approx" "', argument " "1"" of type '" "Pi *""'");
     }
     arg1 = reinterpret_cast< Pi * >(argp1);
-    
-    
-    
-    
+
+
+
+
     result = (double)(arg1)->approx();
-    
-    
-    
+
+
+
     jsresult = SWIG_From_double  SWIG_NAPI_FROM_CALL_ARGS(static_cast< double >(result));
-    
-    
+
+
     return jsresult;
 #ifdef NAPI_CPP_EXCEPTIONS
   } catch (...) {
@@ -1297,7 +1297,7 @@ Napi::Value _exports_Pi_templ<SWIG_OBJ_WRAP>::_wrap_Pi_approxSync(const Napi::Ca
 #else
   goto fail;
 fail:
-  
+
 #endif
   return Napi::Value();
 }
@@ -1335,7 +1335,7 @@ extern "C" {
 */
 SWIGRUNTIME int
 SWIG_TypeNameComp(const char *f1, const char *l1,
-		  const char *f2, const char *l2) {
+      const char *f2, const char *l2) {
   for (;(f1 != l1) && (f2 != l2); ++f1, ++f2) {
     while ((*f1 == ' ') && (f1 != l1)) ++f1;
     while ((*f2 == ' ') && (f2 != l2)) ++f2;
@@ -1475,7 +1475,7 @@ SWIG_TypeClientData(swig_type_info *ti, void *clientdata) {
     if (!cast->converter) {
       swig_type_info *tc = cast->type;
       if (!tc->clientdata) {
-	SWIG_TypeClientData(tc, clientdata);
+  SWIG_TypeClientData(tc, clientdata);
       }
     }
     cast = cast->next;
@@ -1498,32 +1498,32 @@ SWIG_TypeNewClientData(swig_type_info *ti, void *clientdata) {
 SWIGRUNTIME swig_type_info *
 SWIG_MangledTypeQueryModule(swig_module_info *start,
                             swig_module_info *end,
-		            const char *name) {
+                const char *name) {
   swig_module_info *iter = start;
   do {
     if (iter->size) {
       size_t l = 0;
       size_t r = iter->size - 1;
       do {
-	/* since l+r >= 0, we can (>> 1) instead (/ 2) */
-	size_t i = (l + r) >> 1;
-	const char *iname = iter->types[i]->name;
-	if (iname) {
-	  int compare = strcmp(name, iname);
-	  if (compare == 0) {
-	    return iter->types[i];
-	  } else if (compare < 0) {
-	    if (i) {
-	      r = i - 1;
-	    } else {
-	      break;
-	    }
-	  } else if (compare > 0) {
-	    l = i + 1;
-	  }
-	} else {
-	  break; /* should never happen */
-	}
+  /* since l+r >= 0, we can (>> 1) instead (/ 2) */
+  size_t i = (l + r) >> 1;
+  const char *iname = iter->types[i]->name;
+  if (iname) {
+    int compare = strcmp(name, iname);
+    if (compare == 0) {
+      return iter->types[i];
+    } else if (compare < 0) {
+      if (i) {
+        r = i - 1;
+      } else {
+        break;
+      }
+    } else if (compare > 0) {
+      l = i + 1;
+    }
+  } else {
+    break; /* should never happen */
+  }
       } while (l <= r);
     }
     iter = iter->next;
@@ -1543,7 +1543,7 @@ SWIG_MangledTypeQueryModule(swig_module_info *start,
 SWIGRUNTIME swig_type_info *
 SWIG_TypeQueryModule(swig_module_info *start,
                      swig_module_info *end,
-		     const char *name) {
+         const char *name) {
   /* STEP 1: Search the name field using binary search */
   swig_type_info *ret = SWIG_MangledTypeQueryModule(start, end, name);
   if (ret) {
@@ -1555,8 +1555,8 @@ SWIG_TypeQueryModule(swig_module_info *start,
     do {
       size_t i = 0;
       for (; i < iter->size; ++i) {
-	if (iter->types[i]->str && (SWIG_TypeEquiv(iter->types[i]->str, name)))
-	  return iter->types[i];
+  if (iter->types[i]->str && (SWIG_TypeEquiv(iter->types[i]->str, name)))
+    return iter->types[i];
       }
       iter = iter->next;
     } while (iter != end);
@@ -2090,7 +2090,7 @@ Napi::Value SWIG_NAPI_AppendOutput(Napi::Env env, Napi::Value result, Napi::Valu
 
 
 
-SWIG_NAPI_AsyncContext::SWIG_NAPI_AsyncContext(Napi::Env _env) : 
+SWIG_NAPI_AsyncContext::SWIG_NAPI_AsyncContext(Napi::Env _env) :
     env(_env),
     SWIG_NAPI_deferred(Napi::Promise::Deferred(_env)),
     SWIG_NAPI_deferred_finalized(false) {}
@@ -2157,7 +2157,7 @@ void SWIG_NAPI_AsyncWorker::OnOK() {
     context->SWIG_NAPI_Fail(error);
     delete context;
     return;
-  } 
+  }
   delete context;
 }
 
@@ -2280,7 +2280,7 @@ Napi::Value piAsync(const Napi::CallbackInfo &info) {
       Napi::Object obj;
       int res1 = SWIG_ConvertPtr(info[0], reinterpret_cast<void**>(&arg1), SWIGTYPE_p_Pi, 0 |  0 );
       if (!SWIG_IsOK(res1)) {
-        SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "piAsync" "', argument " "1"" of type '" "Pi *""'"); 
+        SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "piAsync" "', argument " "1"" of type '" "Pi *""'");
       }
       NAPI_CHECK_RESULT(info[0].ToObject(), obj);
       if (SWIG_NAPI_IsWrappedObject(env, obj)) {
@@ -2291,7 +2291,7 @@ Napi::Value piAsync(const Napi::CallbackInfo &info) {
       // Create a persistent reference
       ref = new Napi::ObjectReference();
       *ref = Napi::Persistent(obj);
-    
+
       goto fail;
     fail:
       return;
@@ -2337,41 +2337,41 @@ Napi::Value _wrap_placeholderAsync(const Napi::CallbackInfo &info) {
   class __wrap_placeholderAsync_Tasklet : public SWIG_NAPI_AsyncContext {
     Napi::Env env;
     double result;
-    
+
   public:
     __wrap_placeholderAsync_Tasklet(Napi::Env _env)
     :SWIG_NAPI_AsyncContext(_env), env(_env) {
-      
+
     }
-    
+
     virtual void SWIG_NAPI_Execute() override {
       // This runs the action code in a worker thread and V8 is not accessible
       Napi::Env env(SWIG_NULLPTR);
-      
-      
-      
+
+
+
       result = (double)placeholder();
-      
+
       goto fail;
     fail:
       return;
     }
-    
+
 #ifdef NAPI_CPP_EXCEPTIONS
     virtual void SWIG_NAPI_Rethrow(const std::exception_ptr &saved) override {
       // Back in the main thread with V8 access, caller has HandleScope
-      
+
       if (saved) std::rethrow_exception(saved);
-      
-      
+
+
     }
 #endif
-    
+
     virtual void SWIG_NAPI_Resolve() override {
       // Back in the main thread with V8 access, caller has HandleScope
       Napi::Value jsresult;
       jsresult = SWIG_From_double  SWIG_NAPI_FROM_CALL_ARGS(static_cast< double >(result));
-      
+
       if (!SWIG_NAPI_Cleanup()) goto fail;
       SWIG_NAPI_deferred_finalized = true;
       SWIG_NAPI_deferred.Resolve(jsresult);
@@ -2379,21 +2379,21 @@ Napi::Value _wrap_placeholderAsync(const Napi::CallbackInfo &info) {
     fail:
       return;
     }
-    
+
     virtual bool SWIG_NAPI_Cleanup() override {
       return true;
       goto fail;
     fail:
       return false;
     }
-    
+
     virtual SWIG_NAPI_Status SWIG_NAPI_Init(const Napi::CallbackInfo &info) override {
 #ifdef NAPI_CPP_EXCEPTIONS
       try {
 #endif
-        
+
 #define SWIG_NAPI_Raise SWIG_NAPI_Reject
-        
+
 #undef SWIG_NAPI_Raise
         return SWIG_NAPI_Status::OK;
 #ifdef NAPI_CPP_EXCEPTIONS
@@ -2408,7 +2408,7 @@ Napi::Value _wrap_placeholderAsync(const Napi::CallbackInfo &info) {
       return SWIG_NAPI_Status::THROW;
     }
   };
-  
+
   Napi::Env env = info.Env();
   __wrap_placeholderAsync_Tasklet *context = SWIG_NULLPTR;
   SWIG_NAPI_AsyncWorker *worker = SWIG_NULLPTR;
@@ -2432,28 +2432,28 @@ Napi::Value _wrap_placeholderSync(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
   Napi::Value jsresult;
   double result;
-  
-  
+
+
 #ifdef NAPI_CPP_EXCEPTIONS
   try {
 #endif
-    
+
     if(static_cast<int>(info.Length()) < 0 || static_cast<int>(info.Length()) > 0) {
       SWIG_Error(SWIG_ERROR, "Illegal number of arguments for _wrap_placeholderSync.");
     }
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
     result = (double)placeholder();
-    
-    
-    
+
+
+
     jsresult = SWIG_From_double  SWIG_NAPI_FROM_CALL_ARGS(static_cast< double >(result));
-    
-    
+
+
     return jsresult;
 #ifdef NAPI_CPP_EXCEPTIONS
   } catch (...) {
@@ -2462,7 +2462,7 @@ Napi::Value _wrap_placeholderSync(const Napi::CallbackInfo &info) {
 #else
   goto fail;
 fail:
-  
+
 #endif
   return Napi::Value();
 }
@@ -2479,36 +2479,36 @@ Napi::Value _wrap_calcAsync(const Napi::CallbackInfo &info) {
     int res1 = 0 ;
     double temp2 ;
     Pi *result = 0 ;
-    
+
   public:
     _exports_Pi__wrap_calcAsync_Tasklet(Napi::Env _env)
     :SWIG_NAPI_AsyncContext(_env), env(_env) {
-      
+
     }
-    
+
     virtual void SWIG_NAPI_Execute() override {
       // This runs the action code in a worker thread and V8 is not accessible
       Napi::Env env(SWIG_NULLPTR);
-      
-      
-      
+
+
+
       result = (Pi *)calc(arg1,arg2);
-      
+
       goto fail;
     fail:
       return;
     }
-    
+
 #ifdef NAPI_CPP_EXCEPTIONS
     virtual void SWIG_NAPI_Rethrow(const std::exception_ptr &saved) override {
       // Back in the main thread with V8 access, caller has HandleScope
-      
+
       if (saved) std::rethrow_exception(saved);
-      
-      
+
+
     }
 #endif
-    
+
     virtual void SWIG_NAPI_Resolve() override {
       // Back in the main thread with V8 access, caller has HandleScope
       Napi::Value jsresult;
@@ -2516,7 +2516,7 @@ Napi::Value _wrap_calcAsync(const Napi::CallbackInfo &info) {
       {
         jsresult = SWIG_NAPI_AppendOutput(env, jsresult, SWIG_From_double  SWIG_NAPI_FROM_CALL_ARGS(*arg2));
       }
-      
+
       if (!SWIG_NAPI_Cleanup()) goto fail;
       SWIG_NAPI_deferred_finalized = true;
       SWIG_NAPI_deferred.Resolve(jsresult);
@@ -2524,14 +2524,14 @@ Napi::Value _wrap_calcAsync(const Napi::CallbackInfo &info) {
     fail:
       return;
     }
-    
+
     virtual bool SWIG_NAPI_Cleanup() override {
       return true;
       goto fail;
     fail:
       return false;
     }
-    
+
     virtual SWIG_NAPI_Status SWIG_NAPI_Init(const Napi::CallbackInfo &info) override {
 #ifdef NAPI_CPP_EXCEPTIONS
       try {
@@ -2541,11 +2541,11 @@ Napi::Value _wrap_calcAsync(const Napi::CallbackInfo &info) {
         }
         res1 = SWIG_ConvertPtr(info[0], &argp1,SWIGTYPE_p_Pi, 0 |  0 );
         if (!SWIG_IsOK(res1)) {
-          SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "calc" "', argument " "1"" of type '" "Pi *""'"); 
+          SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "calc" "', argument " "1"" of type '" "Pi *""'");
         }
         arg1 = reinterpret_cast< Pi * >(argp1);
 #define SWIG_NAPI_Raise SWIG_NAPI_Reject
-        
+
 #undef SWIG_NAPI_Raise
         return SWIG_NAPI_Status::OK;
 #ifdef NAPI_CPP_EXCEPTIONS
@@ -2560,7 +2560,7 @@ Napi::Value _wrap_calcAsync(const Napi::CallbackInfo &info) {
       return SWIG_NAPI_Status::THROW;
     }
   };
-  
+
   Napi::Env env = info.Env();
   _exports_Pi__wrap_calcAsync_Tasklet *context = SWIG_NULLPTR;
   SWIG_NAPI_AsyncWorker *worker = SWIG_NULLPTR;
@@ -2589,38 +2589,38 @@ Napi::Value _wrap_calcSync(const Napi::CallbackInfo &info) {
   int res1 = 0 ;
   double temp2 ;
   Pi *result = 0 ;
-  
-  
+
+
 #ifdef NAPI_CPP_EXCEPTIONS
   try {
 #endif
-    
+
     if(static_cast<int>(info.Length()) < 1 || static_cast<int>(info.Length()) > 1) {
       SWIG_Error(SWIG_ERROR, "Illegal number of arguments for _wrap_calcSync.");
     }
-    
+
     {
       arg2 = &temp2;
     }
     res1 = SWIG_ConvertPtr(info[0], &argp1,SWIGTYPE_p_Pi, 0 |  0 );
     if (!SWIG_IsOK(res1)) {
-      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "calc" "', argument " "1"" of type '" "Pi *""'"); 
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "calc" "', argument " "1"" of type '" "Pi *""'");
     }
     arg1 = reinterpret_cast< Pi * >(argp1);
-    
-    
-    
-    
+
+
+
+
     result = (Pi *)calc(arg1,arg2);
-    
-    
-    
+
+
+
     jsresult = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Pi, 0 |  0 );
     {
       jsresult = SWIG_NAPI_AppendOutput(env, jsresult, SWIG_From_double  SWIG_NAPI_FROM_CALL_ARGS(*arg2));
     }
-    
-    
+
+
     return jsresult;
 #ifdef NAPI_CPP_EXCEPTIONS
   } catch (...) {
@@ -2629,7 +2629,7 @@ Napi::Value _wrap_calcSync(const Napi::CallbackInfo &info) {
 #else
   goto fail;
 fail:
-  
+
 #endif
   return Napi::Value();
 }
@@ -2671,13 +2671,13 @@ SWIGINTERN swig_module_info swig_module = {swig_types, 3, 0, 0, 0, 0};
 Napi::Function _exports_Pi_inst::GetClass(Napi::Env env) {
   std::map<std::string, _exports_Pi_templ::PropertyDescriptor> members, staticMembers;
   GetMembers(env, members, staticMembers);
-  
+
   std::vector<_exports_Pi_inst::PropertyDescriptor> symbolTable;
   for (auto it = members.begin(); it != members.end(); it++)
   symbolTable.push_back(it->second);
   for (auto it = staticMembers.begin(); it != staticMembers.end(); it++)
   symbolTable.push_back(it->second);
-  
+
   return Napi::ObjectWrap<_exports_Pi_inst>::DefineClass(env, "Pi", symbolTable);
 }
 
@@ -2690,7 +2690,7 @@ void _exports_Pi_inst::GetMembers(
   SWIG_NAPI_ObjectWrap_inst::GetMembers(env, baseMembers, baseStaticMembers);
   members.insert(baseMembers.begin(), baseMembers.end());
   staticMembers.insert(staticMembers.begin(), staticMembers.end());
-  
+
   /* register wrapper functions */
   // jsnapi_register_member_function
   members.erase("approxAsync");
@@ -2708,10 +2708,10 @@ void _exports_Pi_inst::GetMembers(
         &_exports_Pi_templ::_wrap_Pi_approxSync,
         static_cast<napi_property_attributes>(napi_writable | napi_configurable))
     });
-  
+
   /* add static class functions and variables */
-  
-  
+
+
 #ifndef NAPI_CPP_EXCEPTIONS
   goto fail;
 fail:
@@ -2878,7 +2878,7 @@ SWIG_InitializeModule(SWIG_INIT_CLIENT_DATA_TYPE clientdata) {
       printf("SWIG_InitializeModule: found type %s\n", type->name);
 #endif
       if (swig_module.type_initial[i]->clientdata) {
-	type->clientdata = swig_module.type_initial[i]->clientdata;
+  type->clientdata = swig_module.type_initial[i]->clientdata;
 #ifdef SWIGRUNTIME_DEBUG
       printf("SWIG_InitializeModule: found and overwrite type %s \n", type->name);
 #endif
@@ -2899,29 +2899,29 @@ SWIG_InitializeModule(SWIG_INIT_CLIENT_DATA_TYPE clientdata) {
       if (swig_module.next != &swig_module) {
         ret = SWIG_MangledTypeQueryModule(swig_module.next, &swig_module, cast->type->name);
 #ifdef SWIGRUNTIME_DEBUG
-	if (ret) printf("SWIG_InitializeModule: found cast %s\n", ret->name);
+  if (ret) printf("SWIG_InitializeModule: found cast %s\n", ret->name);
 #endif
       }
       if (ret) {
-	if (type == swig_module.type_initial[i]) {
+  if (type == swig_module.type_initial[i]) {
 #ifdef SWIGRUNTIME_DEBUG
-	  printf("SWIG_InitializeModule: skip old type %s\n", ret->name);
+    printf("SWIG_InitializeModule: skip old type %s\n", ret->name);
 #endif
-	  cast->type = ret;
-	  ret = 0;
-	} else {
-	  /* Check for casting already in the list */
-	  swig_cast_info *ocast = SWIG_TypeCheck(ret->name, type);
+    cast->type = ret;
+    ret = 0;
+  } else {
+    /* Check for casting already in the list */
+    swig_cast_info *ocast = SWIG_TypeCheck(ret->name, type);
 #ifdef SWIGRUNTIME_DEBUG
-	  if (ocast) printf("SWIG_InitializeModule: skip old cast %s\n", ret->name);
+    if (ocast) printf("SWIG_InitializeModule: skip old cast %s\n", ret->name);
 #endif
-	  if (!ocast) ret = 0;
-	}
+    if (!ocast) ret = 0;
+  }
       }
 
       if (!ret) {
 #ifdef SWIGRUNTIME_DEBUG
-	printf("SWIG_InitializeModule: adding cast %s\n", cast->type->name);
+  printf("SWIG_InitializeModule: adding cast %s\n", cast->type->name);
 #endif
         if (type->cast) {
           type->cast->prev = cast;
@@ -3006,7 +3006,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   env.GetInstanceData<EnvInstanceData>()->SWIG_NAPI_PackedObjectWrapCtor = SWIG_NAPI_PackedObjectWrap_ctor_ref;
 
   /* create objects for namespaces */
-  
+
 
   /* register classes */
   /* Class: Pi (_exports_Pi) */
@@ -3040,7 +3040,7 @@ env.GetInstanceData<EnvInstanceData>()->ctor[0] = _exports_Pi_ctor_ref;
   } while (0);
 
   /* setup inheritances */
-  
+
 // Inheritance for _exports_Pi (Pi) <- SWIG_NAPI_ObjectWrap
 // jsnapi_setup_inheritance
 do {
