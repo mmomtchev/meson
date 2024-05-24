@@ -8,6 +8,7 @@ import json, subprocess, os, sys, tarfile, io
 import urllib.request, urllib.error, urllib.parse
 from pathlib import Path
 import typing as T
+from typing_extensions import TypedDict
 
 from . import ExtensionModule, ModuleInfo
 from .. import mesonlib
@@ -38,7 +39,7 @@ mod_kwargs -= {'name_prefix', 'name_suffix'}
 
 _MOD_KWARGS = [k for k in SHARED_MOD_KWS if k.name not in {'name_prefix', 'name_suffix'}]
 
-class NodeAPIOptions(T.TypedDict):
+class NodeAPIOptions(TypedDict):
     async_pool:     int
     es6:            bool
     stack:          str
@@ -224,11 +225,12 @@ class NapiModule(ExtensionModule):
     # Use ../.. if it is relative to the project root, but not the project subdir
     def relativize(self, p: T.Union[str, Path], source_dir: Path) -> Path:
         r: Path = p if isinstance(p, Path) else Path(p)
-        if r.is_relative_to(source_dir):
+        if mesonlib.path_is_in_root(r, source_dir, resolve=True):
             return r.relative_to(source_dir)
-        if not r.is_relative_to(self.source_root):
+        if not mesonlib.path_is_in_root(r, self.source_root, resolve=True):
             return r
-        # walk_up in pathlib requires Python 3.12
+        # This requires walk_up in pathlib which requires Python 3.12
+        # In node-api, compiling a 'subdir' requires including ../node_modules/node-addon-api
         return Path(os.path.relpath(str(r), str(source_dir)))
 
     # Transform path to absolute relative to the project root (package.json)
