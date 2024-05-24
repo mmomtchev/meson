@@ -62,7 +62,7 @@ class EmscriptenMixin(Compiler):
     def get_debug_args(self, is_debug: bool) -> T.List[str]:
         return emscripten_debug_args[is_debug]
 
-    def get_option_link_args(self, options: 'KeyedOptionDictType') -> T.List[str]:
+    def get_option_link_args(self, options: coredata.KeyedOptionDictType) -> T.List[str]:
         if options[OptionKey('debug')]:
             return ['-gsource-map']
         return []

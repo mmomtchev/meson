@@ -1251,7 +1251,7 @@ class Interpreter(InterpreterBase, HoldableObject):
             if version == 'undefined':
                 # Try to load the version number from a package.json if it exists
                 try:
-                    with open(Path(self.environment.get_source_dir()) / 'package.json') as package_json:
+                    with open(Path(self.environment.get_source_dir()) / 'package.json', encoding='utf-8') as package_json:
                         pkg_info = json.load(package_json)
                         if 'version' in pkg_info:
                             version = pkg_info['version']
