@@ -365,7 +365,10 @@ def run(options: 'argparse.Namespace') -> int:
     assert isinstance(backend, str)
     mlog.log(mlog.green('INFO:'), 'autodetecting backend as', backend)
     if backend == 'ninja':
-        cmd, env = get_parsed_args_ninja(options, bdir)
+        if 'ninja' in b.environment.binaries.build.binaries:
+            cmd, env = b.environment.binaries.build.binaries['ninja'], None
+        else:
+            cmd, env = get_parsed_args_ninja(options, bdir)
     elif backend.startswith('vs'):
         cmd, env = get_parsed_args_vs(options, bdir)
     elif backend == 'xcode':

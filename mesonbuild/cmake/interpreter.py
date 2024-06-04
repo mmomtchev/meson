@@ -849,6 +849,11 @@ class CMakeInterpreter:
             mlog.debug('CMake build type set from the meson build type')
             cmake_args += [f'-DCMAKE_BUILD_TYPE={self.build_type}']
 
+        # CMAKE_MAKE_PROGRAM cannot be reliably set from the toolchain
+        # It belongs in the generator (or the cache)
+        if 'ninja' in self.env.binaries.build.binaries:
+            cmake_args += [f'-DCMAKE_MAKE_PROGRAM={self.env.binaries.build.binaries["ninja"][0]}']
+
         trace_args = self.trace.trace_args()
         cmcmp_args = [f'-DCMAKE_POLICY_WARNING_{x}=OFF' for x in DISABLE_POLICY_WARNINGS]
 
