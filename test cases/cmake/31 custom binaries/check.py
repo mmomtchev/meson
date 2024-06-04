@@ -12,3 +12,4 @@ with open(sys.argv[1]) as log:
     assert('-C' in flat)
     assert('-t' in flat)
     assert('build.ninja' in flat)
+    assert('ninja2.py' in flat[-1])
