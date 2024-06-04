@@ -155,8 +155,12 @@ def generate_target_names_ninja(target: ParsedTargetName, builddir: Path, intros
     else:
         return [str(Path(out_file).relative_to(builddir.resolve())) for out_file in intro_target['filename']]
 
-def get_parsed_args_ninja(options: 'argparse.Namespace', builddir: Path) -> T.Tuple[T.List[str], T.Optional[T.Dict[str, str]]]:
-    runner = detect_ninja()
+def get_parsed_args_ninja(options: 'argparse.Namespace', builddir: Path, env: 'Environment') -> T.Tuple[T.List[str], T.Optional[T.Dict[str, str]]]:
+    if 'ninja' in env.binaries.build.binaries:
+        runner = env.binaries.build.binaries['ninja']
+    else:
+        runner = detect_ninja()
+
     if runner is None:
         raise MesonException('Cannot find ninja.')
 
@@ -365,10 +369,7 @@ def run(options: 'argparse.Namespace') -> int:
     assert isinstance(backend, str)
     mlog.log(mlog.green('INFO:'), 'autodetecting backend as', backend)
     if backend == 'ninja':
-        if 'ninja' in b.environment.binaries.build.binaries:
-            cmd, env = b.environment.binaries.build.binaries['ninja'], None
-        else:
-            cmd, env = get_parsed_args_ninja(options, bdir)
+        cmd, env = get_parsed_args_ninja(options, bdir, b.environment)
     elif backend.startswith('vs'):
         cmd, env = get_parsed_args_vs(options, bdir)
     elif backend == 'xcode':
