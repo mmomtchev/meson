@@ -10,7 +10,7 @@ if not python.found()
 endif
 
 configure_file(input: 'ninja2.py.in', output: 'ninja2.py', configuration: { 'LOG': meson.global_build_root() / 'log'})
-run_command(['chmod', '755', meson.global_build_root() / 'ninja2.py'])
+run_command(['chmod', '755', meson.global_build_root() / 'ninja2.py'], check: true)
 
 cm = import('cmake')
 
