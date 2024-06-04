@@ -197,7 +197,7 @@ def run(options: Arguments) -> int:
         if vsenv_active:
             mlog.log(mlog.green('INFO:'), 'automatically activated MSVC compiler environment')
 
-        cmd = detect_ninja() + ['-C', options.builddir]
+        cmd = detect_ninja(b.environment) + ['-C', options.builddir]
         ret = subprocess.run(cmd)
         if ret.returncode:
             raise SystemExit

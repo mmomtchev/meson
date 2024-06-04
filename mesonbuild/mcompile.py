@@ -22,6 +22,7 @@ from mesonbuild import build
 
 if T.TYPE_CHECKING:
     import argparse
+    from mesonbuild.environment import Environment
 
 def array_arg(value: str) -> T.List[str]:
     return listify_array_value(value)
@@ -156,11 +157,7 @@ def generate_target_names_ninja(target: ParsedTargetName, builddir: Path, intros
         return [str(Path(out_file).relative_to(builddir.resolve())) for out_file in intro_target['filename']]
 
 def get_parsed_args_ninja(options: 'argparse.Namespace', builddir: Path, env: 'Environment') -> T.Tuple[T.List[str], T.Optional[T.Dict[str, str]]]:
-    if 'ninja' in env.binaries.build.binaries:
-        runner = env.binaries.build.binaries['ninja']
-    else:
-        runner = detect_ninja()
-
+    runner = detect_ninja(env)
     if runner is None:
         raise MesonException('Cannot find ninja.')
 

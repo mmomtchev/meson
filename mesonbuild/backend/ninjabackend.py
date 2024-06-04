@@ -599,7 +599,7 @@ class NinjaBackend(backends.Backend):
             # We don't yet have a use case where we'd expect to make use of this,
             # so no harm in catching and reporting something unexpected.
             raise MesonBugException('We do not expect the ninja backend to be given a valid \'vslite_ctx\'')
-        ninja = environment.detect_ninja_command_and_version(log=True)
+        ninja = environment.detect_ninja_command_and_version(self.environment, log=True)
         if self.environment.coredata.get_option(OptionKey('vsenv')):
             builddir = Path(self.environment.get_build_dir())
             try:

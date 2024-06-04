@@ -37,6 +37,7 @@ from mesonbuild import envconfig
 
 if T.TYPE_CHECKING:
     from configparser import ConfigParser
+    from mesonbuild.environment import Environment as BuildEnv
 
     from .compilers import Compiler
     from .wrap.wrap import Resolver
@@ -149,12 +150,12 @@ def find_coverage_tools(coredata: coredata.CoreData) -> T.Tuple[T.Optional[str],
 
     return gcovr_exe, gcovr_version, lcov_exe, lcov_version, genhtml_exe, llvm_cov_exe
 
-def detect_ninja(version: str = '1.8.2', log: bool = False) -> T.List[str]:
-    r = detect_ninja_command_and_version(version, log)
+def detect_ninja(env: 'BuildEnv' = None, version: str = '1.8.2', log: bool = False) -> T.List[str]:
+    r = detect_ninja_command_and_version(env, version, log)
     return r[0] if r else None
 
-def detect_ninja_command_and_version(version: str = '1.8.2', log: bool = False) -> T.Tuple[T.List[str], str]:
-    env_ninja = os.environ.get('NINJA', None)
+def detect_ninja_command_and_version(env: 'BuildEnv' = None, version: str = '1.8.2', log: bool = False) -> T.Tuple[T.List[str], str]:
+    env_ninja = env.binaries.build.binaries['ninja'][0] if env and 'ninja' in env.binaries.build.binaries else os.environ.get('NINJA', None)
     for n in [env_ninja] if env_ninja else ['ninja', 'ninja-build', 'samu']:
         prog = ExternalProgram(n, silent=True)
         if not prog.found():

@@ -1623,10 +1623,12 @@ class TestHarness:
         return self.console_logger
 
     def prepare_build(self) -> None:
+        self.build_data = build.load(os.getcwd())
+
         if self.options.no_rebuild:
             return
 
-        self.ninja = environment.detect_ninja()
+        self.ninja = environment.detect_ninja(self.build_data.environment)
         if not self.ninja:
             print("Can't find ninja, can't rebuild test.")
             # If ninja can't be found return exit code 127, indicating command
@@ -1652,7 +1654,6 @@ class TestHarness:
                     if ret.returncode != 0:
                         raise TestException(f'Could not configure {self.options.wd!r}')
 
-            self.build_data = build.load(os.getcwd())
             if not self.options.setup:
                 self.options.setup = self.build_data.test_setup_default_name
             if self.options.benchmark:
