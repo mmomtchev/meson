@@ -851,7 +851,8 @@ class CMakeInterpreter:
 
         # CMAKE_MAKE_PROGRAM cannot be reliably set from the toolchain
         # It belongs in the generator (or the cache)
-        if 'ninja' in self.env.binaries.build.binaries:
+        backend = T.cast('str', self.env.coredata.get_option(OptionKey('backend')))
+        if backend == 'ninja' and 'ninja' in self.env.binaries.build.binaries:
             cmake_args += [f'-DCMAKE_MAKE_PROGRAM={self.env.binaries.build.binaries["ninja"][0]}']
 
         trace_args = self.trace.trace_args()
