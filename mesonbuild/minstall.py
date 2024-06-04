@@ -34,7 +34,7 @@ if T.TYPE_CHECKING:
             InstallSymlinkData, TargetInstallData
     )
     from .mesonlib import FileMode, EnvironOrDict, ExecutableSerialisation
-    from .mesonbuild import Environment
+    from .environment import Environment
 
     try:
         from typing import Protocol
@@ -775,7 +775,7 @@ class Installer:
                 # file mode needs to be set last, after strip/depfixer editing
                 self.set_mode(outname, install_mode, d.install_umask)
 
-def rebuild_all(wd: str, backend: str, env: 'Environment') -> bool:
+def rebuild_all(wd: str, backend: str, build_env: 'Environment') -> bool:
     if backend == 'none':
         # nothing to build...
         return True
@@ -783,7 +783,7 @@ def rebuild_all(wd: str, backend: str, env: 'Environment') -> bool:
         print('Only ninja backend is supported to rebuild the project before installation.')
         return True
 
-    ninja = environment.detect_ninja(env)
+    ninja = environment.detect_ninja(build_env)
     if not ninja:
         print("Can't find ninja, can't rebuild test.")
         return False
