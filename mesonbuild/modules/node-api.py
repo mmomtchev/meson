@@ -110,9 +110,9 @@ class NapiModule(ExtensionModule):
         self.download_headers()
         self.methods.update({
             'extension_module': self.extension_module_method,
-            'get_option': self.get_option_method,
             'test': self.test_method,
         })
+        self.parse_npm_options()
 
     def parse_node_json_output(self, code: str) -> Any:
         result: Any = None
@@ -259,6 +259,24 @@ class NapiModule(ExtensionModule):
         js_lib: str = self.emnapi_package['js_library']
         return Path(js_lib)
 
+    def parse_npm_options(self) -> None:
+        for key in self.interpreter.environment.coredata.options.keys():
+            opt = self.interpreter.environment.coredata.options[key]
+            if isinstance(opt.value, str):
+                if 'npm_config_' + key.name in os.environ:
+                    opt.set_value(os.environ['npm_config_' + key.name])
+            if isinstance(opt.value, bool):
+                npm_enable = 'npm_config_enable_' + key.name in os.environ
+                npm_disable = 'npm_config_disable_' + key.name in os.environ
+                if npm_enable and npm_disable:
+                    l = list(os.environ.keys())
+                    mlog.warning(f'Found both --enable-{key.name} and --disable-{key.name}, last one wins')
+                    opt.set_value(l.index('npm_config_enable_' + key.name) > l.index('npm_config_disable_' + key.name))
+                elif npm_enable:
+                    opt.set_value(True)
+                elif npm_disable:
+                    opt.set_value(False)
+
     @permittedKwargs(mod_kwargs)
     @typed_pos_args('node-api.extension_module', str, varargs=(str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget))
     # TODO: For some strange reason, install_dir requires allow_unknown=True
@@ -359,26 +377,6 @@ class NapiModule(ExtensionModule):
         kwargs.setdefault('args', []).insert(0, node_script)
 
         self.interpreter.add_test(state.current_node, (test_name, ExternalProgram('node')), T.cast('T.Dict[str, Any]', kwargs), True)
-
-    @typed_pos_args('node-api.get_option', str, bool)
-    @typed_kwargs('node_api.get_option', KwargInfo('short', bool, default=False))
-    def get_option_method(self, state: 'ModuleState', args: T.Tuple[str, bool], kwargs: 'NPMOption_KWS') -> bool:
-        npm_enable = False
-        npm_disable = False
-        if kwargs['short']:
-            npm_enable = 'npm_config_' + args[0] in os.environ
-        else:
-            npm_enable = 'npm_config_enable_' + args[0] in os.environ
-            npm_disable = 'npm_config_disable_' + args[0] in os.environ
-        if npm_enable and npm_disable:
-            l = list(os.environ.keys())
-            mlog.warning(f'Found both --enable-{args[0]} and --disable-{args[0]}, last one wins')
-            return l.index('npm_config_enable_' + args[0]) > l.index('npm_config_disable_' + args[0])
-        if npm_enable:
-            return True
-        if npm_disable:
-            return False
-        return args[1]
 
 def initialize(interpreter: 'Interpreter') -> NapiModule:
     mod = NapiModule(interpreter)

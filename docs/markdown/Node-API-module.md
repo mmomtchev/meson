@@ -12,17 +12,10 @@ project(
 # Simply include the module
 napi = import('node-api')
 
-# get the state of --enable-option from 'npm install --enable-option'
-if napi.get_option('option', false)
+# get the state of --enable-option or --disable-option from 'npm install --enable-option'
+# option must be declared as a boolean option in meson.options
+if get_option('option')
   add_global_arguments('-DOPTION', language: 'cpp')
-endif
-# get the state of --disable-not_option from 'npm install --disable-not_option'
-if napi.get_option('not_option', true)
-  add_global_arguments('-DNOT_OPTION', language: 'cpp')
-endif
-# get the state of --shared from 'npm install --shared'
-if napi.get_option('shared', false, short: true)
-  add_global_arguments('-DSHARED', language: 'cpp')
 endif
 
 # Use napi.extension_module() instead of

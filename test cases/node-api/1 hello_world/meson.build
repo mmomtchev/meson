@@ -13,27 +13,36 @@ addon = napi.extension_module(
   install: true
   )
 
-if not napi.get_option('enabled', false)
+if not get_option('enabled')
   error('enabled not enabled')
 endif
-if napi.get_option('disabled', true)
+if get_option('disabled')
   error('disabled not disabled')
 endif
-if napi.get_option('absent', false)
-  error('absent not defaulted to false')
+if get_option('default_false')
+  error('default_false not defaulted to false')
 endif
-if not napi.get_option('absent', true)
-  error('absent not defaulted to true')
+if not get_option('default_true')
+  error('default_true not defaulted to true')
 endif
-if not napi.get_option('shared', false, short: true)
-  error('shared not true')
+if get_option('string') != 'string'
+  error('string not string')
+endif
+if get_option('choice') != 'a'
+  error('choice a not a')
+endif
+if not get_option('lib').enabled()
+  error('feature enabled not enabled')
 endif
 
 summary({
-  'enabled': napi.get_option('enabled', false),
-  'disabled': napi.get_option('disabled', true),
-  'true': napi.get_option('absent', true),
-  'false': napi.get_option('absent', false)
+  'enabled': get_option('enabled'),
+  'disabled': get_option('disabled'),
+  'true': get_option('default_true'),
+  'false': get_option('default_false'),
+  'string': get_option('string'),
+  'choice': get_option('choice'),
+  'lib': get_option('lib'),
 })
 
 if host_machine.system() == 'emscripten'
