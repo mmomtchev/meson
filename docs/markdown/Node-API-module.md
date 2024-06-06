@@ -20,6 +20,10 @@ endif
 if napi.get_option('not_option', true)
   add_global_arguments('-DNOT_OPTION', language: 'cpp')
 endif
+# get the state of --shared from 'npm install --shared'
+if napi.get_option('shared', false, short: true)
+  add_global_arguments('-DSHARED', language: 'cpp')
+endif
 
 # Use napi.extension_module() instead of
 # shared_module() with the same arguments

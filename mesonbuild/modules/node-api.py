@@ -35,6 +35,9 @@ if T.TYPE_CHECKING:
         swig:           bool
         environments:   T.List[str]
 
+    class NPMOption_KWS(TypedDict):
+        short:          bool
+
 name_prefix = ''
 name_suffix_native = 'node'
 name_suffix_wasm_es6 = 'mjs'
@@ -317,8 +320,8 @@ class NapiModule(ExtensionModule):
 
         return self.interpreter.build_target(state.current_node, args, kwargs, SharedModule)
 
-    @typed_pos_args('node_api_extension.test', str, (str, mesonlib.File), (SharedModule, mesonlib.File))
-    @typed_kwargs('node_api_extenstion.test', *TEST_KWS, KwargInfo('is_parallel', bool, default=True))
+    @typed_pos_args('node_api.test', str, (str, mesonlib.File), (SharedModule, mesonlib.File))
+    @typed_kwargs('node_api.test', *TEST_KWS, KwargInfo('is_parallel', bool, default=True))
     def test_method(self, state: 'ModuleState',
                     args: T.Tuple[
                         str,
@@ -358,10 +361,15 @@ class NapiModule(ExtensionModule):
         self.interpreter.add_test(state.current_node, (test_name, ExternalProgram('node')), T.cast('T.Dict[str, Any]', kwargs), True)
 
     @typed_pos_args('node-api.get_option', str, bool)
-    @noKwargs
-    def get_option_method(self, state: 'ModuleState', args: T.Tuple[str, bool], kwargs: 'TYPE_kwargs') -> bool:
-        npm_enable = 'npm_config_enable_' + args[0] in os.environ
-        npm_disable = 'npm_config_disable_' + args[0] in os.environ
+    @typed_kwargs('node_api.get_option', KwargInfo('short', bool, default=False))
+    def get_option_method(self, state: 'ModuleState', args: T.Tuple[str, bool], kwargs: 'NPMOption_KWS') -> bool:
+        npm_enable = False
+        npm_disable = False
+        if kwargs['short']:
+            npm_enable = 'npm_config_' + args[0] in os.environ
+        else:
+            npm_enable = 'npm_config_enable_' + args[0] in os.environ
+            npm_disable = 'npm_config_disable_' + args[0] in os.environ
         if npm_enable and npm_disable:
             l = list(os.environ.keys())
             mlog.warning(f'Found both --enable-{args[0]} and --disable-{args[0]}, last one wins')

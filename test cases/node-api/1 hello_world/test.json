@@ -1,7 +1,8 @@
 {
   "env": {
     "npm_config_enable_enabled": "true",
-    "npm_config_disable_disabled": "true"
+    "npm_config_disable_disabled": "true",
+    "npm_config_shared": "true"
   },
   "installed": [
     {"type": "js_module_main", "file": "usr/hello_world"},
