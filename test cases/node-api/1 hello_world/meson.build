@@ -13,27 +13,13 @@ addon = napi.extension_module(
   install: true
   )
 
-if not get_option('enabled')
-  error('enabled not enabled')
-endif
-if get_option('disabled')
-  error('disabled not disabled')
-endif
-if get_option('default_false')
-  error('default_false not defaulted to false')
-endif
-if not get_option('default_true')
-  error('default_true not defaulted to true')
-endif
-if get_option('string') != 'string'
-  error('string not string')
-endif
-if get_option('choice') != 'a'
-  error('choice a not a')
-endif
-if not get_option('lib').enabled()
-  error('feature enabled not enabled')
-endif
+assert(get_option('enabled'))
+assert(not get_option('disabled'))
+assert(not get_option('default_false'))
+assert(get_option('default_true'))
+assert(get_option('string') == 'string')
+assert(get_option('choice') == 'a')
+assert(get_option('lib').enabled())
 
 summary({
   'enabled': get_option('enabled'),
