@@ -262,20 +262,24 @@ class NapiModule(ExtensionModule):
     def parse_npm_options(self) -> None:
         for key in self.interpreter.environment.coredata.options.keys():
             opt = self.interpreter.environment.coredata.options[key]
+            env_name = key.name if key.lang is None else f'{key.lang}_{key.name}'
             if isinstance(opt.value, str):
-                if 'npm_config_' + key.name in os.environ:
-                    opt.set_value(os.environ['npm_config_' + key.name])
+                if 'npm_config_' + env_name in os.environ:
+                    opt.set_value(os.environ['npm_config_' + env_name])
             if isinstance(opt.value, bool):
-                npm_enable = 'npm_config_enable_' + key.name in os.environ
-                npm_disable = 'npm_config_disable_' + key.name in os.environ
+                npm_enable = 'npm_config_enable_' + env_name in os.environ
+                npm_disable = 'npm_config_disable_' + env_name in os.environ
                 if npm_enable and npm_disable:
                     l = list(os.environ.keys())
-                    mlog.warning(f'Found both --enable-{key.name} and --disable-{key.name}, last one wins')
-                    opt.set_value(l.index('npm_config_enable_' + key.name) > l.index('npm_config_disable_' + key.name))
+                    mlog.warning(f'Found both --enable-{env_name} and --disable-{env_name}, last one wins')
+                    opt.set_value(l.index('npm_config_enable_' + env_name) > l.index('npm_config_disable_' + env_name))
                 elif npm_enable:
                     opt.set_value(True)
                 elif npm_disable:
                     opt.set_value(False)
+            if isinstance(opt.value, list):
+                if 'npm_config_' + env_name in os.environ:
+                    opt.extend_value(os.environ['npm_config_' + env_name])
 
     @permittedKwargs(mod_kwargs)
     @typed_pos_args('node-api.extension_module', str, varargs=(str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget))

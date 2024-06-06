@@ -20,6 +20,9 @@ assert(get_option('default_true'))
 assert(get_option('string') == 'string')
 assert(get_option('choice') == 'a')
 assert(get_option('lib').enabled())
+assert(get_option('array')[0] == 'a')
+assert(get_option('array')[1] == 'b')
+assert(get_option('array')[2] == 'c')
 
 summary({
   'enabled': get_option('enabled'),
@@ -29,6 +32,7 @@ summary({
   'string': get_option('string'),
   'choice': get_option('choice'),
   'lib': get_option('lib'),
+  'array': get_option('array'),
 })
 
 if host_machine.system() == 'emscripten'
