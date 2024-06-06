@@ -36,9 +36,6 @@ if T.TYPE_CHECKING:
         swig:           bool
         environments:   T.List[str]
 
-    class NPMOption_KWS(TypedDict):
-        short:          bool
-
 name_prefix = ''
 name_suffix_native = 'node'
 name_suffix_wasm_es6 = 'mjs'
