@@ -23,6 +23,7 @@ if T.TYPE_CHECKING:
     from . import ModuleState
     from ..interpreter import Interpreter
     from ..interpreter.kwargs import SharedModule as SharedModuleKw, FuncTest as FuncTestKw
+    from .. import options
     from typing import Any
     from typing_extensions import TypedDict
 
@@ -279,7 +280,7 @@ class NapiModule(ExtensionModule):
                     opt.set_value(False)
             if isinstance(opt.value, list):
                 if 'npm_config_' + env_name in os.environ:
-                    opt.extend_value(os.environ['npm_config_' + env_name])
+                    T.cast('options.UserArrayOption', opt).extend_value(os.environ['npm_config_' + env_name])
 
     @permittedKwargs(mod_kwargs)
     @typed_pos_args('node-api.extension_module', str, varargs=(str, mesonlib.File, CustomTarget, CustomTargetIndex, GeneratedList, StructuredSources, ExtractedObjects, BuildTarget))
