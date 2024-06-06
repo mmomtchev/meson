@@ -360,12 +360,12 @@ class NapiModule(ExtensionModule):
     @typed_pos_args('node-api.get_option', str, bool)
     @noKwargs
     def get_option_method(self, state: 'ModuleState', args: T.Tuple[str, bool], kwargs: 'TYPE_kwargs') -> bool:
-        npm_enable =  True if 'npm_config_enable_'  + args[0] in os.environ else False
-        npm_disable = True if 'npm_config_disable_' + args[0] in os.environ else False
+        npm_enable = 'npm_config_enable_' + args[0] in os.environ
+        npm_disable = 'npm_config_disable_' + args[0] in os.environ
         if npm_enable and npm_disable:
             l = list(os.environ.keys())
             mlog.warning(f'Found both --enable-{args[0]} and --disable-{args[0]}, last one wins')
-            return l.index('npm_config_enable_'  + args[0]) > l.index('npm_config_disable_' + args[0])
+            return l.index('npm_config_enable_' + args[0]) > l.index('npm_config_disable_' + args[0])
         if npm_enable:
             return True
         if npm_disable:
