@@ -16,7 +16,7 @@ from ..build import known_shmod_kwargs, CustomTarget, CustomTargetIndex, BuildTa
 from ..programs import ExternalProgram
 from ..interpreter.type_checking import SHARED_MOD_KWS, TEST_KWS
 from ..interpreterbase import (
-    permittedKwargs, typed_pos_args, typed_kwargs, KwargInfo, noKwargs, TYPE_kwargs
+    permittedKwargs, typed_pos_args, typed_kwargs, KwargInfo
 )
 
 if T.TYPE_CHECKING:
