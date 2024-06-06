@@ -12,6 +12,15 @@ project(
 # Simply include the module
 napi = import('node-api')
 
+# get the state of --enable-option from 'npm install --enable-option'
+if napi.get_option('option', false)
+  add_global_arguments('-DOPTION', language: 'cpp')
+endif
+# get the state of --disable-not_option from 'npm install --disable-not_option'
+if napi.get_option('not_option', true)
+  add_global_arguments('-DNOT_OPTION', language: 'cpp')
+endif
+
 # Use napi.extension_module() instead of
 # shared_module() with the same arguments
 addon = napi.extension_module(

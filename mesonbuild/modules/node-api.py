@@ -16,7 +16,7 @@ from ..build import known_shmod_kwargs, CustomTarget, CustomTargetIndex, BuildTa
 from ..programs import ExternalProgram
 from ..interpreter.type_checking import SHARED_MOD_KWS, TEST_KWS
 from ..interpreterbase import (
-    permittedKwargs, typed_pos_args, typed_kwargs, KwargInfo
+    permittedKwargs, typed_pos_args, typed_kwargs, KwargInfo, noKwargs, TYPE_kwargs
 )
 
 if T.TYPE_CHECKING:
@@ -107,6 +107,7 @@ class NapiModule(ExtensionModule):
         self.download_headers()
         self.methods.update({
             'extension_module': self.extension_module_method,
+            'get_option': self.get_option_method,
             'test': self.test_method,
         })
 
@@ -355,6 +356,21 @@ class NapiModule(ExtensionModule):
         kwargs.setdefault('args', []).insert(0, node_script)
 
         self.interpreter.add_test(state.current_node, (test_name, ExternalProgram('node')), T.cast('T.Dict[str, Any]', kwargs), True)
+
+    @typed_pos_args('node-api.get_option', str, bool)
+    @noKwargs
+    def get_option_method(self, state: 'ModuleState', args: T.Tuple[str, bool], kwargs: 'TYPE_kwargs') -> bool:
+        npm_enable =  True if 'npm_config_enable_'  + args[0] in os.environ else False
+        npm_disable = True if 'npm_config_disable_' + args[0] in os.environ else False
+        if npm_enable and npm_disable:
+            l = list(os.environ.keys())
+            mlog.warning(f'Found both --enable-{args[0]} and --disable-{args[0]}, last one wins')
+            return l.index('npm_config_enable_'  + args[0]) > l.index('npm_config_disable_' + args[0])
+        if npm_enable:
+            return True
+        if npm_disable:
+            return False
+        return args[1]
 
 def initialize(interpreter: 'Interpreter') -> NapiModule:
     mod = NapiModule(interpreter)
