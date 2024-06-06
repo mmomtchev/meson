@@ -12,10 +12,20 @@ project(
 # Simply include the module
 napi = import('node-api')
 
-# get the state of --enable-option or --disable-option from 'npm install --enable-option'
+# Get the state of --enable-option1 or --disable-option1 from 'npm install --enable-option1'
 # option must be declared as a boolean option in meson.options
-if get_option('option')
-  add_global_arguments('-DOPTION', language: 'cpp')
+# This is not an officially documented `npm` feature but it is widely used by the
+# existing build systems and it is expected to always work
+if get_option('option1')
+  add_global_arguments('-DOPTION1', language: 'cpp')
+endif
+
+# Get the value of --option2=value from 'npm install --option2=value'
+# option must be declared as a string option in meson.options
+# Use extreme caution as this is not an officially documented `npm` feature
+# and some option names can be interpreted by `npm` itself
+if get_option('option2')
+  add_global_arguments('-DOPTION2=' + get_option('option2'), language: 'cpp')
 endif
 
 # Use napi.extension_module() instead of
