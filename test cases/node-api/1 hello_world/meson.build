@@ -25,6 +25,9 @@ endif
 if not napi.get_option('absent', true)
   error('absent not defaulted to true')
 endif
+if not napi.get_option('shared', false, short: true)
+  error('shared not true')
+endif
 
 summary({
   'enabled': napi.get_option('enabled', false),
