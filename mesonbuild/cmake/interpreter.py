@@ -89,8 +89,7 @@ SKIP_TARGETS: T.Collection[str] = ['UTILITY']
 
 # TODO: This is a bad solution to the problem that the CMake fileAPI does not make it clear
 # which flags are linker flags and which are compiler flags - which means that some manual filtering is needed
-# By looking at the produces JSON, there appear to be to identically named items, one with all the compiler
-# flags and another one with all the linker flags -> clarify if this is set in stone
+# https://gitlab.kitware.com/cmake/cmake/-/issues/26040
 BLACKLIST_COMPILER_FLAGS: T.Collection[str] = [
     '-Wall', '-Wextra', '-Weverything', '-Werror', '-Wpedantic', '-pedantic', '-w',
     '/W1', '/W2', '/W3', '/W4', '/Wall', '/WX', '/w',
