@@ -87,37 +87,6 @@ TARGET_TYPE_MAP: T.Mapping[str, str] = {
 
 SKIP_TARGETS: T.Collection[str] = ['UTILITY']
 
-BLACKLIST_COMPILER_FLAGS: T.Collection[str] = [
-    '-Wall', '-Wextra', '-Weverything', '-Werror', '-Wpedantic', '-pedantic', '-w',
-    '/W1', '/W2', '/W3', '/W4', '/Wall', '/WX', '/w',
-    '/O1', '/O2', '/Ob', '/Od', '/Og', '/Oi', '/Os', '/Ot', '/Ox', '/Oy', '/Ob0',
-    '/RTC1', '/RTCc', '/RTCs', '/RTCu',
-    '/Z7', '/Zi', '/ZI',
-]
-
-BLACKLIST_LINK_FLAGS: T.Collection[str] = [
-    '/machine:x64', '/machine:x86', '/machine:arm', '/machine:ebc',
-    '/debug', '/debug:fastlink', '/debug:full', '/debug:none',
-    '/incremental',
-]
-
-BLACKLIST_CLANG_CL_LINK_FLAGS: T.Collection[str] = [
-    '/GR', '/EHsc', '/MDd', '/Zi', '/RTC1',
-]
-
-BLACKLIST_LINK_LIBS: T.Collection[str] = [
-    'kernel32.lib',
-    'user32.lib',
-    'gdi32.lib',
-    'winspool.lib',
-    'shell32.lib',
-    'ole32.lib',
-    'oleaut32.lib',
-    'uuid.lib',
-    'comdlg32.lib',
-    'advapi32.lib'
-]
-
 TRANSFER_DEPENDENCIES_FROM: T.Collection[str] = ['header_only']
 
 _cmake_name_regex = re.compile(r'[^_a-zA-Z0-9]')
@@ -332,8 +301,6 @@ class ConverterTarget:
                     # corresponding custom target is run.2
                     self.generated_raw += [Path(j)]
                     temp += [j]
-                elif j in BLACKLIST_COMPILER_FLAGS:
-                    pass
                 else:
                     temp += [j]
 
@@ -450,17 +417,6 @@ class ConverterTarget:
         if self.install_dir and self.install_dir.is_absolute():
             if path_is_in_root(self.install_dir, install_prefix):
                 self.install_dir = self.install_dir.relative_to(install_prefix)
-
-        # Remove blacklisted options and libs
-        def check_flag(flag: str) -> bool:
-            if flag.lower() in BLACKLIST_LINK_FLAGS or flag in BLACKLIST_COMPILER_FLAGS or flag in BLACKLIST_CLANG_CL_LINK_FLAGS:
-                return False
-            if flag.startswith('/D'):
-                return False
-            return True
-
-        self.link_libraries = [x for x in self.link_libraries if x.lower() not in BLACKLIST_LINK_LIBS]
-        self.link_flags = [x for x in self.link_flags if check_flag(x)]
 
         # Handle OSX frameworks
         def handle_frameworks(flags: T.List[str]) -> T.List[str]:
