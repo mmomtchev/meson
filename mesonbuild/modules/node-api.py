@@ -217,8 +217,8 @@ class NapiModule(ExtensionModule):
                     mlog.log(f'Downloading {url} to {str(file)}')
                     with file.open('wb') as output:
                         output.write(remote.read())
-        except:
-            raise mesonlib.MesonException('Failed downloading from ' + url)
+        except Exception as e:
+            raise mesonlib.MesonException(f'Failed downloading from {url}: {str(e)}')
 
     def download_headers(self) -> None:
         if 'headersUrl' in self.node_process['release']:
