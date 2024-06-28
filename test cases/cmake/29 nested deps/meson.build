@@ -1,4 +1,4 @@
-project('cmakeSubTest', ['c', 'cpp'])
+project('cmakeSubTest', ['c', 'cpp'], default_options: ['cpp_std=c++14'])
 
 cm = import('cmake')
 opts = cm.subproject_options()
