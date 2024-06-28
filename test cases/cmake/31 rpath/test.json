@@ -1,13 +1,7 @@
 {
   "installed": [
     {"type": "exe", "file": "usr/bin/main"},
-    {"type": "shared_lib", "platform": "gcc", "file": "usr/lib/cmModLib__"},
-    {"type": "shared_lib", "platform": "gcc", "file": "usr/private/cmModLibInternal"},
-    {"type": "shared_lib", "platform": "msvc", "file": "usr/lib/cmModLib__"},
-    {"type": "shared_lib", "platform": "msvc", "file": "usr/private/cmModLibInternal"},
-    {"type": "shared_lib", "platform": "cygwin", "file": "usr/lib/libcmModLib__"},
-    {"type": "shared_lib", "platform": "cygwin", "file": "usr/private/libcmModLibInternal"},
-    {"type": "file", "platform": "cygwin", "file": "usr/lib/libcmModLib__.dll.a"},
-    {"type": "file", "platform": "cygwin", "file": "usr/private/libcmModLibInternal.dll.a"}
+    {"type": "shared_lib", "file": "usr/lib/*cmModLib__*"},
+    {"type": "shared_lib", "file": "usr/private/*cmModLibInternal*"}
   ]
 }
