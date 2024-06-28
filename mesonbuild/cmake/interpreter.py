@@ -248,6 +248,8 @@ class ConverterTarget:
         self.compile_opts: T.Dict[str, T.List[str]] = {}
         self.public_compile_opts: T.List[str] = []
         self.pie = False
+        self.install_rpath: T.Optional[str] = None
+        self.build_rpath: T.Optional[str] = None
 
         # Project default override options (c_std, cpp_std, etc.)
         self.override_options: T.List[str] = []

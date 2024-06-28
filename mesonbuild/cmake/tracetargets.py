@@ -46,8 +46,8 @@ class ResolvedTarget:
         self.public_compile_opts: T.List[str] = []
         self.libraries:           T.List[str] = []
         self.link_with:           T.List[ConverterTarget] = []
-        self.install_rpath:       T.Union[str, None] = None
-        self.build_rpath:         T.Union[str, None] = None
+        self.install_rpath:       T.Optional[str] = None
+        self.build_rpath:         T.Optional[str] = None
 
 # CMake library specs (when not referring to a CMake target) can be
 # files or library names, prefixed w/ -l or w/o
